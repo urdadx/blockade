@@ -1,4 +1,6 @@
 import { type Dispatch, type ReactNode, type SetStateAction, useMemo } from "react";
+import type { AreaVariant } from "./dither-kit/chart-context";
+import type { DitherColor } from "./dither-kit/palette";
 import { ScrollArea } from "./scroll-area";
 import { LineItem } from "./line-item";
 
@@ -13,11 +15,13 @@ interface BarListProps {
 		href: string;
 		value: number;
 		linkId?: string;
-		barBackground?: string;
+		ditherColor?: DitherColor;
+		ditherVariant?: AreaVariant;
 		hoverBackground?: string;
 	}[];
 	maxValue: number;
-	barBackground?: string;
+	ditherColor?: DitherColor;
+	ditherVariant?: AreaVariant;
 	hoverBackground?: string;
 	setShowModal: Dispatch<SetStateAction<boolean>>;
 	limit?: number;
@@ -28,7 +32,8 @@ export default function BarList({
 	tab = "Websites",
 	unit = "visits",
 	data = EMPTY_DATA,
-	barBackground = "bg-blue-500",
+	ditherColor = "blue",
+	ditherVariant = "gradient",
 	hoverBackground = "hover:bg-gray-100",
 	maxValue,
 	limit,
@@ -59,7 +64,8 @@ export default function BarList({
 					maxValue={calculatedMaxValue}
 					tab={tab}
 					unit={unit}
-					barBackground={item.barBackground || barBackground}
+					ditherColor={item.ditherColor || ditherColor}
+					ditherVariant={item.ditherVariant || ditherVariant}
 					hoverBackground={item.hoverBackground || hoverBackground}
 					minBarWidth={minBarWidth}
 				/>

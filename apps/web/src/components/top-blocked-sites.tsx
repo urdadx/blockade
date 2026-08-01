@@ -38,13 +38,7 @@ const blockedSites = [
 	},
 ];
 
-export function TopBlockedSites({
-	className,
-	dateRange,
-}: {
-	className?: string;
-	dateRange: string;
-}) {
+export function TopBlockedSites({ className }: { className?: string; dateRange: string }) {
 	return (
 		<section className={cn("h-full rounded-xl border bg-white p-5", className)}>
 			<div className="mb-4 flex items-start justify-between gap-4">
@@ -56,12 +50,6 @@ export function TopBlockedSites({
 						Sites with the most blocked attempts this week
 					</p>
 				</div>
-				<div className="shrink-0 text-right">
-					<p className="text-xs text-muted-foreground">{dateRange}</p>
-					<h3 className="mt-1 font-display text-base font-medium">
-						Last 7 days
-					</h3>
-				</div>
 			</div>
 
 			<BarList
@@ -69,7 +57,8 @@ export function TopBlockedSites({
 				unit="attempts"
 				data={blockedSites}
 				limit={5}
-				barBackground="bg-emerald-200"
+				ditherColor="green"
+				ditherVariant="gradient"
 				hoverBackground="hover:bg-emerald-50"
 				minBarWidth={12}
 			/>

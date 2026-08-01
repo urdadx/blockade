@@ -22,7 +22,7 @@ const categoryValues = Object.fromEntries(
 	categoryData.map(({ category, attempts }) => [category, attempts]),
 );
 
-export function TopCategoriesChart({ dateRange }: { dateRange: string }) {
+export function TopCategoriesChart() {
 	return (
 		<section className="h-full rounded-xl border bg-white p-5">
 			<div className="mb-4 flex items-start justify-between gap-4">
@@ -33,12 +33,6 @@ export function TopCategoriesChart({ dateRange }: { dateRange: string }) {
 					<p className="mt-1 text-sm text-muted-foreground">
 						Most-blocked categories this week
 					</p>
-				</div>
-				<div className="shrink-0 text-right">
-					<p className="text-xs text-muted-foreground">{dateRange}</p>
-					<h3 className="mt-1 font-display text-base font-medium">
-						Last 7 days
-					</h3>
 				</div>
 			</div>
 

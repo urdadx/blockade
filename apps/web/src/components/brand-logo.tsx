@@ -4,7 +4,7 @@ import type { SVGProps } from "react";
 export function BrandLogo({ className, ...props }: SVGProps<SVGSVGElement>) {
 	return (
 		<svg
-			viewBox="0 0 64 64"
+			viewBox="0 0 70 70"
 			role="img"
 			aria-label="Blockade"
 			className={cn("size-9 shrink-0", className)}

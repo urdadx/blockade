@@ -1,3 +1,6 @@
+import { DitherBarFill } from "@/components/dither-bar-fill";
+import type { AreaVariant } from "@/components/dither-kit/chart-context";
+import type { DitherColor } from "@/components/dither-kit/palette";
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
 import { type ReactNode, useMemo, useState } from "react";
@@ -10,7 +13,8 @@ interface LineItemProps {
 	maxValue: number;
 	tab: string;
 	unit: string;
-	barBackground?: string;
+	ditherColor?: DitherColor;
+	ditherVariant?: AreaVariant;
 	hoverBackground?: string;
 	linkData?: any;
 	minBarWidth?: number;
@@ -22,7 +26,8 @@ export function LineItem({
 	value,
 	maxValue,
 	unit,
-	barBackground = "bg-gray-200",
+	ditherColor = "blue",
+	ditherVariant = "gradient",
 	hoverBackground = "hover:bg-gray-50",
 	minBarWidth = 10,
 }: LineItemProps) {
@@ -72,14 +77,18 @@ export function LineItem({
 								width: `${percentWidth}%`,
 							}}
 							className={cn(
-								"absolute h-full origin-left rounded-md",
-								barBackground,
-								isHovered ? "opacity-80" : "opacity-70",
+								"absolute h-full origin-left overflow-hidden rounded-sm  transition-opacity",
+								isHovered ? "opacity-60" : "opacity-45",
 							)}
 							transition={{ ease: "easeOut", duration: 0.3 }}
 							initial={{ transform: "scaleX(0)" }}
-							animate={{ transform: "scaleX(1)" }}
-						/>
+							animate={{ transform: "scaleX(1)" }}>
+							<DitherBarFill
+								color={ditherColor}
+								variant={ditherVariant}
+								intensity={isHovered ? 1 : 0}
+							/>
+						</motion.div>
 					</div>
 					<div className="z-10 text-sm tabular-nums text-black-500 ml-2 shrink-0">
 						{formattedValue}

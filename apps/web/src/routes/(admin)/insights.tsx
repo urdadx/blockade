@@ -69,10 +69,11 @@ function RouteComponent() {
 			/>
 			<div className="mt-5 grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-2">
 				<FocusTimeChart data={chartData} dateRange="Jul 27 - Aug 2" />
-				<TopBlockedSites dateRange="Jul 27 - Aug 2" />
+				<BlockAttemptsChart data={chartData} dateRange="Jul 27 - Aug 2" />
 			</div>{" "}
 			<div className="mt-5 grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-2">
-				<BlockAttemptsChart data={chartData} dateRange="Jul 27 - Aug 2" />
+				<TopBlockedSites dateRange="Jul 27 - Aug 2" />
+
 				<TopCategoriesChart dateRange="Jul 27 - Aug 2" />
 			</div>
 		</main>

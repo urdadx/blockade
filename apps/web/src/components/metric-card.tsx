@@ -1,6 +1,6 @@
+import { AlertLinear } from "@/assets/icons/alert-icon";
 import { FireOutline } from "@/assets/icons/fire";
 import { MedalOutline } from "@/assets/icons/medal";
-import { ShieldOutline } from "@/assets/icons/shield";
 import { TimerOutline } from "@/assets/icons/timer";
 import { TriangleDown, TriangleUp } from "@/assets/icons/triangle-icon";
 import { cn } from "@/lib/utils";
@@ -73,7 +73,7 @@ export function MetricCard({
 		},
 		{
 			label: "Blocks triggered",
-			icon: ShieldOutline,
+			icon: AlertLinear,
 			iconClassName: "text-emerald-500",
 			...blocksTriggered,
 		},
