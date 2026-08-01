@@ -11,11 +11,12 @@ import {
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/sidebar";
 import { ArrowDownLinear } from "@/assets/icons/arrow-down";
 import { CheckMarkIcon } from "@/assets/icons/checkmark-icon";
+import { BrandLogo } from "@/components/brand-logo";
 
 const dummySites = [
 	{
-		id: "better-comments",
-		name: "Better Comments",
+		id: "blockade",
+		name: "Blockade",
 		image: "",
 		primaryColor: "#6366f1",
 	},
@@ -53,20 +54,22 @@ export function SiteSwitcher() {
 								size="lg"
 								className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground rounded-md w-full">
 								<div className="flex aspect-square size-8 items-center justify-center rounded-lg">
-									<Avatar className="h-8 w-8 rounded-lg">
-										<AvatarImage
-											className="w-full h-full rounded-md"
-											src={activeSite?.image ?? ""}
-											alt={activeSite?.name ?? ""}
-										/>
-										{!activeSite?.image && (
-											<AvatarFallback className="rounded-md h-full w-full bg-primary text-white font-semibold">
-												{activeSite?.name?.charAt(
-													0,
-												) || "B"}
-											</AvatarFallback>
-										)}
-									</Avatar>
+									{activeSite?.id === "blockade" ? (
+										<BrandLogo />
+									) : (
+										<Avatar className="h-8 w-8 rounded-lg">
+											<AvatarImage
+												className="w-full h-full rounded-md"
+												src={activeSite?.image ?? ""}
+												alt={activeSite?.name ?? ""}
+											/>
+											{!activeSite?.image && (
+												<AvatarFallback className="rounded-md h-full w-full bg-primary text-white font-semibold">
+													{activeSite?.name?.charAt(0) || "B"}
+												</AvatarFallback>
+											)}
+										</Avatar>
+									)}
 								</div>
 								<div className="grid flex-1 text-left text-sm leading-tight">
 									<span className="truncate ">

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <clipPath id="clip">
+      <rect width="64" height="64" rx="12" />
+    </clipPath>
+  </defs>
+  <g clip-path="url(#clip)">
+    <rect width="64" height="64" fill="oklch(60.89% 0.1675 249.01)" />
+    <image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAABGdBTUEAALGPC/xhBQAAADNQTFRF////////////////////////////////////////////////////////////AAAA////FbWC9gAAABB0Uk5T3y9Pr5+Pb1/P7x8Pfz+/ANW+cSYAAAGVSURBVFjD1ZfbcoQgDIYBOQco7/+0VWe1rCYQdbbT/pcZ+QwEchBfDyU+CIjOlFVGwQ2AnOqPgo4XAaDrQRquAKSoJ3nJB0CoiELkAsBXVB6YAGJ9rYUHMJVU4gBi47PLs1zjUWQA9vj7vJnUfqh6DIjYocudAEOA2z5VrVVtVjcETPiJl5d5GgI8/qvNMT8EEJuFzc4GcO2/B3i9T3EbYNerEOxtADsj/XNANMU/Acg2Fc7lIKkcLwE0loREmZLNmQXwtSfCJT5gkwESUHnSFACYgPeX3gAyF5CfAqgtJOZ6wQa4ZbMu9AucQCrKe1qV7CgU4rvULZAN4OCrQorlKksByGD1otgA4lNApjyVvWvQANSxJQLilVOARLRErt/niE5ns8QLpsoFlBPAovfb8AEZuZ6nRkt00klEsY4PANSaCYCs2L8k7hcGQNJJMDoM0kkDsMx0EigANx+VjwG4W0gUAPxDwDwmlctF4dxg5GzTVEQHEHlTW8wqzVPjqCgwJteDS0HeHX0Xl1KynInlDw3fPH0DDobv9TxABmEAAAAASUVORK5CYII=" x="4" y="4" width="56" height="56" />
+  </g>
+</svg>

@@ -5,6 +5,7 @@ import {
 	SidebarMenuItem,
 } from "@/components/sidebar";
 import { useSidebar } from "@/components/sidebar";
+import { Kbd } from "@/components/kbd";
 import { Link, useLocation } from "@tanstack/react-router";
 
 export function NavMain({
@@ -31,13 +32,18 @@ export function NavMain({
 		}
 	};
 
-	const activeItemClassName =
-		"bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary";
+	const activeItemClassName = "text-primary hover:bg-transparent hover:text-primary";
+	const itemClassName = "hover:bg-transparent hover:text-primary";
 	const iconClassName = "size-4! text-current";
+	const shortcuts: Record<string, string> = {
+		"Block Sites": "B",
+		Insights: "I",
+		"Focus Mode": "F",
+	};
 
 	return (
 		<SidebarGroup className="py-0 my-0 mt-2">
-			<SidebarMenu>
+			<SidebarMenu className="gap-3">
 				{items.map((item) => {
 					const isMainItemActive = pathname === item.url;
 
@@ -53,7 +59,7 @@ export function NavMain({
 										className={
 											isMainItemActive
 												? activeItemClassName
-												: ""
+												: itemClassName
 										}>
 										{item.icon && (
 											<item.icon
@@ -64,11 +70,16 @@ export function NavMain({
 										<span
 											className={
 												isMainItemActive
-													? "text-primary font-medium"
+													? "text-black font-medium"
 													: ""
 											}>
 											{item.title}
 										</span>
+										{shortcuts[item.title] && (
+											<Kbd className="ml-auto bg-white border  group-data-[collapsible=icon]:hidden">
+												{shortcuts[item.title]}
+											</Kbd>
+										)}
 									</SidebarMenuButton>
 								</Link>
 								<div className="">
@@ -82,7 +93,7 @@ export function NavMain({
 												className={
 													isSubItemActive
 														? activeItemClassName
-														: ""
+														: itemClassName
 												}>
 												<Link
 													to={subItem.url}
@@ -93,7 +104,7 @@ export function NavMain({
 													<span
 														className={
 															isSubItemActive
-																? "text-primary font-medium"
+																? "text-black font-medium"
 																: ""
 														}>
 														{subItem.title}

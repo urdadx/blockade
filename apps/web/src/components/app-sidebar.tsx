@@ -8,39 +8,33 @@ import {
 	SidebarProvider,
 } from "@/components/sidebar";
 import { Outlet } from "@tanstack/react-router";
-import { HomeLinear } from "@/assets/icons/home-duotone";
-import { ChartLinear } from "@/assets/icons/chart-icon";
+import { ChartIcon } from "@/assets/icons/chart-icon";
 import { SettingsLinear } from "@/assets/icons/settings-duotone";
 
-import { PlaneLinear } from "@/assets/icons/plane-icon";
-import { SiteSwitcher } from "./site-switcher";
 import { NavUser } from "./nav-user";
-import { Navbar } from "./navbar";
 import { NavMain } from "./nav-main";
-import { PenLinear } from "@/assets/icons/pen-icon";
+import { LockIcon } from "@/assets/icons/lock";
+import { BrandLogo } from "./brand-logo";
+import { BoltIcon } from "@/assets/icons/bolt-icon";
 
 const data = {
 	overview: [
 		{
-			title: "Overview",
-			url: "/overview",
-			icon: HomeLinear,
+			title: "Block Sites",
+			url: "/block-sites",
+			icon: LockIcon,
 		},
 		{
-			title: "Customize",
-			url: "/customize",
-			icon: PenLinear,
+			title: "Insights",
+			url: "/insights",
+			icon: ChartIcon,
 		},
 		{
-			title: "Comments",
-			url: "/comments",
-			icon: PlaneLinear,
+			title: "Focus Mode",
+			url: "/focus-mode",
+			icon: BoltIcon,
 		},
-		{
-			title: "Polls",
-			url: "/polls",
-			icon: ChartLinear,
-		},
+
 		{
 			title: "Settings",
 			url: "/settings",
@@ -53,19 +47,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	return (
 		<SidebarProvider>
 			<Sidebar collapsible="icon" {...props}>
-				<SidebarHeader>
-					<SiteSwitcher />
+				<SidebarHeader className="p-5 flex flex-row gap-2 items-center ">
+					<BrandLogo />
+					<span className="text-2xl font-display font-semibold text-foreground">
+						Blockade
+					</span>
 				</SidebarHeader>
-				<SidebarContent className="">
+				<SidebarContent className="p-3">
 					<NavMain items={data.overview} />
 				</SidebarContent>
-				<SidebarFooter>
+				<SidebarFooter className="p-4">
 					<NavUser />
 				</SidebarFooter>
 			</Sidebar>
-			<SidebarInset className="min-h-0 min-w-0 flex flex-col overflow-x-hidden">
-				<Navbar />
-				<div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
+			<SidebarInset className="min-h-0 bg-[#FCFCFC] min-w-0 flex flex-col overflow-x-hidden">
+				{/* <Navbar /> */}
+
+				<div className="flex-1 min-w-0  overflow-y-auto overflow-x-hidden">
 					<Outlet />
 				</div>
 			</SidebarInset>
