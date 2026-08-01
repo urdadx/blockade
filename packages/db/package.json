@@ -1,0 +1,32 @@
+{
+  "name": "@blockade/db",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {
+    "db:local": "turso dev --db-file local.db",
+    "db:push": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate",
+    "db:studio": "drizzle-kit studio",
+    "db:migrate": "drizzle-kit migrate"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "@blockade/config": "workspace:*",
+    "drizzle-kit": "^0.31.10"
+  },
+  "dependencies": {
+    "dotenv": "catalog:",
+    "zod": "catalog:",
+    "@blockade/env": "workspace:*",
+    "drizzle-orm": "^0.45.2",
+    "@libsql/client": "0.17.4",
+    "libsql": "0.5.29"
+  }
+}

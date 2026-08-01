@@ -1,0 +1,3 @@
+{
+  "extends": "@blockade/config/tsconfig.base.json",
+}

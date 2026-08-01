@@ -1,0 +1,24 @@
+{
+  "name": "@blockade/auth",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "type": "module",
+  "scripts": {},
+  "devDependencies": {
+    "typescript": "catalog:",
+    "@blockade/config": "workspace:*"
+  },
+  "dependencies": {
+    "dotenv": "catalog:",
+    "zod": "catalog:",
+    "@blockade/env": "workspace:*",
+    "@blockade/db": "workspace:*",
+    "better-auth": "catalog:"
+  }
+}

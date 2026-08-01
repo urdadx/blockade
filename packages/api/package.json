@@ -1,0 +1,27 @@
+{
+  "name": "@blockade/api",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "type": "module",
+  "scripts": {},
+  "devDependencies": {
+    "typescript": "catalog:",
+    "@blockade/config": "workspace:*",
+    "hono": "catalog:"
+  },
+  "dependencies": {
+    "dotenv": "catalog:",
+    "zod": "catalog:",
+    "@blockade/env": "workspace:*",
+    "@blockade/auth": "workspace:*",
+    "@blockade/db": "workspace:*",
+    "@trpc/server": "catalog:",
+    "@trpc/client": "catalog:"
+  }
+}
