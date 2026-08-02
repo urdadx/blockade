@@ -29,8 +29,8 @@ export function DitherBarFill({
 			canvas.height = rows;
 			context.clearRect(0, 0, cols, rows);
 
-			// Paint vertically with Dither Kit, then transpose so its bright value
-			// edge and dense baseline become the horizontal bar's end caps.
+			// Paint vertically, then transpose. Start above the visible canvas so
+			// the bright cap is clipped while the dense right edge remains.
 			const source = document.createElement("canvas");
 			source.width = rows;
 			source.height = cols;
@@ -39,7 +39,7 @@ export function DitherBarFill({
 
 			const seed = seedOfColor(color);
 			for (let x = 0; x < rows; x += 1) {
-				paintColumn(sourceContext, x, 0, cols, seed, {
+				paintColumn(sourceContext, x, -2, cols, seed, {
 					variant,
 					intensity,
 					dim: 1,
