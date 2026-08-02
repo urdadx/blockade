@@ -1,0 +1,29 @@
+{
+  "id": "news",
+  "label": "News",
+  "description": "General news, politics, business news, and current events websites.",
+  "domains": [
+    "abcnews.go.com",
+    "aljazeera.com",
+    "apnews.com",
+    "axios.com",
+    "bbc.com",
+    "bbc.co.uk",
+    "bloomberg.com",
+    "cbsnews.com",
+    "cnn.com",
+    "economist.com",
+    "foxnews.com",
+    "huffpost.com",
+    "nbcnews.com",
+    "newsweek.com",
+    "npr.org",
+    "nytimes.com",
+    "politico.com",
+    "reuters.com",
+    "theguardian.com",
+    "time.com",
+    "washingtonpost.com",
+    "wsj.com"
+  ]
+}

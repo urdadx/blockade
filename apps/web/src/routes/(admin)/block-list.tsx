@@ -1,9 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/tabs";
 import { BlockListTable } from "@/components/block-list-table";
-import { Button } from "@/components/button";
-import { TimerOutline } from "@/assets/icons/timer";
-import { PlusIcon } from "lucide-react";
+import { AddBlockListDialog } from "@/components/add-block-list-dialog";
+import { ScheduleTimerDialog } from "@/components/schedule-timer-dialog";
 
 export const Route = createFileRoute("/(admin)/block-list")({
 	component: RouteComponent,
@@ -48,14 +47,8 @@ function RouteComponent() {
 						</TabsList>
 					</div>
 					<div className="grid w-full shrink-0 grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:flex sm:w-auto">
-						<Button className="w-full sm:w-auto">
-							<PlusIcon />
-							Add to block list
-						</Button>
-						<Button variant="outline" className="w-full sm:w-auto">
-							<TimerOutline />
-							Schedule
-						</Button>
+						<AddBlockListDialog className="w-full sm:w-auto" />
+						<ScheduleTimerDialog className="w-full sm:w-auto" />
 					</div>
 				</div>
 				<TabsContent value="tab-1" className="w-full min-w-0 pt-3">

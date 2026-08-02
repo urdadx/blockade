@@ -5,13 +5,9 @@ import type { DitherColor } from "@/components/dither-kit/palette";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/table";
 import { getWebsiteFaviconUrl } from "@/lib/utils";
-import {
-	type ColumnDef,
-	flexRender,
-	getCoreRowModel,
-	useReactTable,
-} from "@tanstack/react-table";
+import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { useState } from "react";
+import { CardFrame } from "./card";
 
 const formatLimit = (minutes: number) => {
 	if (minutes < 60) return `${minutes} mins`;
@@ -214,23 +210,32 @@ export function BlockListTable() {
 	});
 
 	return (
-		<div className="w-full max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border bg-white md:max-w-full">
+		<CardFrame className="w-full max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border bg-white md:max-w-full">
 			<Table
+				variant="card"
 				className="min-w-full"
 				style={{ width: `${table.getTotalSize()}px` }}>
 				<TableHeader>
 					{table.getHeaderGroups().map((headerGroup) => (
 						<TableRow
 							key={headerGroup.id}
-							className="h-11 bg-[#FAFAFA] text-sidebar-accent-foreground hover:bg-sidebar-accent">
+							className="h-10 bg-[#FAFAFA] text-sidebar-accent-foreground hover:bg-sidebar-accent">
 							{headerGroup.headers.map((header) => (
 								<TableHead
 									key={header.id}
-									className={header.column.id === "name" ? "h-11 px-4" : "h-11"}
+									className={
+										header.column.id === "name"
+											? "h-10 px-4"
+											: "h-10"
+									}
 									style={{ width: `${header.getSize()}px` }}>
 									{header.isPlaceholder
 										? null
-										: flexRender(header.column.columnDef.header, header.getContext())}
+										: flexRender(
+												header.column.columnDef
+													.header,
+												header.getContext(),
+											)}
 								</TableHead>
 							))}
 						</TableRow>
@@ -239,7 +244,9 @@ export function BlockListTable() {
 				<TableBody>
 					{table.getRowModel().rows.length === 0 ? (
 						<TableRow>
-							<TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+							<TableCell
+								colSpan={columns.length}
+								className="h-24 text-center text-muted-foreground">
 								No blocked sites.
 							</TableCell>
 						</TableRow>
@@ -252,12 +259,18 @@ export function BlockListTable() {
 										className={
 											cell.column.id === "name"
 												? "h-16 px-4 py-1"
-												: cell.column.id === "actions"
+												: cell.column.id ===
+													  "actions"
 													? "h-16 py-1 pr-4 text-right"
 													: "h-16 py-1"
 										}
-										style={{ width: `${cell.column.getSize()}px` }}>
-										{flexRender(cell.column.columnDef.cell, cell.getContext())}
+										style={{
+											width: `${cell.column.getSize()}px`,
+										}}>
+										{flexRender(
+											cell.column.columnDef.cell,
+											cell.getContext(),
+										)}
 									</TableCell>
 								))}
 							</TableRow>
@@ -265,6 +278,6 @@ export function BlockListTable() {
 					)}
 				</TableBody>
 			</Table>
-		</div>
+		</CardFrame>
 	);
 }

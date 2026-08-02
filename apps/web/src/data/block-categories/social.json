@@ -1,0 +1,28 @@
+{
+  "id": "social",
+  "label": "Social",
+  "description": "Social networks, communities, messaging, and discussion platforms.",
+  "domains": [
+    "bsky.app",
+    "discord.com",
+    "facebook.com",
+    "instagram.com",
+    "linkedin.com",
+    "mastodon.social",
+    "meetup.com",
+    "nextdoor.com",
+    "pinterest.com",
+    "quora.com",
+    "reddit.com",
+    "snapchat.com",
+    "t.me",
+    "telegram.org",
+    "threads.net",
+    "tiktok.com",
+    "tumblr.com",
+    "vk.com",
+    "weibo.com",
+    "whatsapp.com",
+    "x.com"
+  ]
+}

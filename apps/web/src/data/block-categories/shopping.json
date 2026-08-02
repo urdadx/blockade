@@ -1,0 +1,27 @@
+{
+  "id": "shopping",
+  "label": "Shopping",
+  "description": "Online stores, marketplaces, fashion, electronics, and retail websites.",
+  "domains": [
+    "aliexpress.com",
+    "amazon.com",
+    "asos.com",
+    "bestbuy.com",
+    "costco.com",
+    "ebay.com",
+    "etsy.com",
+    "homedepot.com",
+    "ikea.com",
+    "lowes.com",
+    "macys.com",
+    "newegg.com",
+    "nordstrom.com",
+    "shein.com",
+    "target.com",
+    "temu.com",
+    "walmart.com",
+    "wayfair.com",
+    "wish.com",
+    "zalando.com"
+  ]
+}

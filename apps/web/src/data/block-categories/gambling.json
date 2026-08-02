@@ -1,0 +1,27 @@
+{
+  "id": "gambling",
+  "label": "Gambling",
+  "description": "Online casinos, sportsbooks, poker, and betting websites.",
+  "domains": [
+    "888casino.com",
+    "bet365.com",
+    "betfair.com",
+    "betmgm.com",
+    "betway.com",
+    "bovada.lv",
+    "caesars.com",
+    "coral.co.uk",
+    "draftkings.com",
+    "fanduel.com",
+    "ladbrokes.com",
+    "paddypower.com",
+    "pokerstars.com",
+    "pointsbet.com",
+    "roobet.com",
+    "sportsbet.com.au",
+    "stake.com",
+    "tab.com.au",
+    "unibet.com",
+    "williamhill.com"
+  ]
+}

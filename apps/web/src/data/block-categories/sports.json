@@ -1,0 +1,30 @@
+{
+  "id": "sports",
+  "label": "Sports",
+  "description": "Sports news, scores, leagues, teams, and live match coverage.",
+  "domains": [
+    "as.com",
+    "bleacherreport.com",
+    "cbssports.com",
+    "cricbuzz.com",
+    "espn.com",
+    "espncricinfo.com",
+    "fifa.com",
+    "flashscore.com",
+    "formula1.com",
+    "goal.com",
+    "livescore.com",
+    "marca.com",
+    "mlb.com",
+    "nba.com",
+    "nbcsports.com",
+    "nfl.com",
+    "nhl.com",
+    "olympics.com",
+    "skysports.com",
+    "sofascore.com",
+    "sports.yahoo.com",
+    "theathletic.com",
+    "uefa.com"
+  ]
+}

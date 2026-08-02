@@ -9,7 +9,7 @@ import {
 } from "@/components/sidebar";
 import { Outlet } from "@tanstack/react-router";
 import { ChartIcon } from "@/assets/icons/chart-icon";
-import { SettingsLinear } from "@/assets/icons/settings-duotone";
+import { SettingsIcon } from "@/assets/icons/settings-duotone";
 
 import { NavUser } from "./nav-user";
 import { NavMain } from "./nav-main";
@@ -38,7 +38,7 @@ const data = {
 		{
 			title: "Settings",
 			url: "/settings",
-			icon: SettingsLinear,
+			icon: SettingsIcon,
 		},
 	],
 };
