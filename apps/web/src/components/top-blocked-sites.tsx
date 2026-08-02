@@ -38,7 +38,7 @@ const blockedSites = [
 	},
 ];
 
-export function TopBlockedSites({ className }: { className?: string; dateRange: string }) {
+export function TopBlockedSites({ className }: { className?: string }) {
 	return (
 		<section className={cn("h-full rounded-xl border bg-white p-5", className)}>
 			<div className="mb-4 flex items-start justify-between gap-4">

@@ -20,8 +20,8 @@ import { BoltIcon } from "@/assets/icons/bolt-icon";
 const data = {
 	overview: [
 		{
-			title: "Block Sites",
-			url: "/block-sites",
+			title: "Block List",
+			url: "/block-list",
 			icon: LockIcon,
 		},
 		{
@@ -61,8 +61,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				</SidebarFooter>
 			</Sidebar>
 			<SidebarInset className="min-h-0 bg-[#FCFCFC] min-w-0 flex flex-col overflow-x-hidden">
-				{/* <Navbar /> */}
-
 				<div className="flex-1 min-w-0  overflow-y-auto overflow-x-hidden">
 					<Outlet />
 				</div>

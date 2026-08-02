@@ -35,8 +35,9 @@ export function NavMain({
 	const activeItemClassName = "text-primary hover:bg-transparent hover:text-primary";
 	const itemClassName = "hover:bg-transparent hover:text-primary";
 	const iconClassName = "size-4! text-current";
+
 	const shortcuts: Record<string, string> = {
-		"Block Sites": "B",
+		"Block List": "B",
 		Insights: "I",
 		"Focus Mode": "F",
 	};
