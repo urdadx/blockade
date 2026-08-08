@@ -2,7 +2,7 @@ import { Switch } from "../switch";
 import { cn } from "@/lib/utils";
 import { CustomRedirectDialog } from "../custom-redirect-dialog";
 
-const backgroundImages = import.meta.glob<string>("/src/assets/backgrounds/*.png", {
+const backgroundImages = import.meta.glob<string>("/src/assets/backgrounds/*.avif", {
 	eager: true,
 	import: "default",
 });
@@ -11,7 +11,7 @@ const backgrounds = Object.entries(backgroundImages).sort(([a], [b]) => a.locale
 
 export function RedirectSettings() {
 	return (
-		<div className="flex flex-col gap-2 p-6  lg:items-start">
+		<div className="flex flex-col gap-2 p-6 lg:items-start">
 			<div className="w-full flex items-center justify-between space-y-5">
 				<div className="space-y-2">
 					<h3 className="text-lg font-semibold tracking-tight text-foreground">
@@ -25,7 +25,7 @@ export function RedirectSettings() {
 				<CustomRedirectDialog />
 			</div>
 
-			<div className="w-full flex items-center justify-between  py-2">
+			<div className="w-full flex items-center justify-between">
 				<span className="truncate flex items-center gap-3 text-sm text-foreground">
 					Show pomodoro timer on redirect page
 				</span>
@@ -50,7 +50,7 @@ export function RedirectSettings() {
 			</div>
 			<div className="grid w-full sm:max-w-4xl grid-cols-6 gap-6">
 				{backgrounds.map(([fileName, src]) => {
-					const name = fileName.split("/").pop()?.replace(".png", "");
+					const name = fileName.split("/").pop()?.replace(".avif", "");
 					return (
 						<button
 							key={fileName}
