@@ -12,7 +12,7 @@ const backgrounds = Object.entries(backgroundImages).sort(([a], [b]) => a.locale
 export function RedirectSettings() {
 	return (
 		<div className="flex flex-col gap-2 p-6 lg:items-start">
-			<div className="w-full flex items-center justify-between space-y-5">
+			<div className="flex w-full pb-0 sm:pb-3 flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
 				<div className="space-y-2">
 					<h3 className="text-lg font-semibold tracking-tight text-foreground">
 						Redirect Page Settings
@@ -22,33 +22,27 @@ export function RedirectSettings() {
 						redirected
 					</p>
 				</div>
-				<CustomRedirectDialog />
+				<CustomRedirectDialog className="w-full sm:w-fit" />
 			</div>
 
-			<div className="w-full flex items-center justify-between">
-				<span className="truncate flex items-center gap-3 text-sm text-foreground">
+			<div className="flex w-full pt-3 sm:pt-0 items-center justify-between">
+				<span className="min-w-0 flex-1 text-sm text-foreground">
 					Show pomodoro timer on redirect page
 				</span>
-				<Switch checked={true} />
+				<Switch checked={true} className="shrink-0" />
 			</div>
-			<div className="w-full flex items-center justify-between  py-2">
-				<span className="truncate flex items-center gap-3 text-sm text-foreground">
+			<div className="flex w-full items-center justify-between gap-3 pt-4 pb-2">
+				<span className="min-w-0 flex-1 text-sm text-foreground">
 					Enable background dither effect
 				</span>
-				<Switch checked={true} />
+				<Switch checked={true} className="shrink-0" />
 			</div>
 			<div className="space-y-2 w-full pt-3">
 				<h3 className="text-lg font-semibold tracking-tight text-foreground">
-					Background image
+					Background images
 				</h3>
-				<div className="w-full flex items-center justify-between  py-2">
-					<span className="truncate flex items-center gap-3 text-sm text-foreground">
-						Randomize background image on each redirect
-					</span>
-					<Switch checked={true} />
-				</div>
 			</div>
-			<div className="grid w-full sm:max-w-4xl grid-cols-6 gap-6">
+			<div className="grid w-full grid-cols-3 gap-3 sm:max-w-4xl sm:grid-cols-6 sm:gap-6">
 				{backgrounds.map(([fileName, src]) => {
 					const name = fileName.split("/").pop()?.replace(".avif", "");
 					return (
@@ -57,7 +51,7 @@ export function RedirectSettings() {
 							type="button"
 							aria-label={`Use ${name} background`}
 							className={cn(
-								"group relative size-34 overflow-hidden rounded-md border bg-muted transition-colors hover:border-primary",
+								"group relative aspect-square w-full overflow-hidden rounded-md border bg-muted transition-colors hover:border-primary sm:size-34",
 							)}>
 							<img
 								src={src}

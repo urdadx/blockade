@@ -1,5 +1,6 @@
+import { SleepIcon } from "@/assets/icons/sleep-icon";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../select";
-import { TimerOutline } from "@/assets/icons/timer";
+import { TimerIcon } from "@/assets/icons/timer";
 
 export function PomodoroSettings() {
 	const durationLengths = [
@@ -61,13 +62,13 @@ export function PomodoroSettings() {
 
 			<div className="space-y-3">
 				<div>
-					<div className="flex items-center justify-between gap-2 py-2">
-						<span className="truncate flex items-center gap-3 text-sm text-foreground">
-							<TimerOutline />
+					<div className="flex flex-col gap-2 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+						<span className="flex min-w-0 items-center gap-3 text-sm text-foreground sm:shrink sm:truncate">
+							<TimerIcon className="shrink-0" />
 							Default session duration
 						</span>
 						<Select items={durationLengths} defaultValue="25">
-							<SelectTrigger className="w-[180px]">
+							<SelectTrigger className="w-full sm:w-45">
 								<SelectValue placeholder="Select a duration" />
 							</SelectTrigger>
 							<SelectContent>
@@ -81,13 +82,13 @@ export function PomodoroSettings() {
 							</SelectContent>
 						</Select>
 					</div>
-					<div className="flex items-center justify-between gap-2 py-2">
-						<span className="truncate flex items-center gap-3 text-sm text-foreground">
-							<TimerOutline />
+					<div className="flex flex-col gap-2 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+						<span className="flex min-w-0 items-center gap-3 text-sm text-foreground sm:shrink sm:truncate">
+							<SleepIcon className="shrink-0" />
 							Default break duration
 						</span>
 						<Select items={durationLengths} defaultValue="25">
-							<SelectTrigger className="w-[180px]">
+							<SelectTrigger className="w-full sm:w-45">
 								<SelectValue placeholder="Select a duration" />
 							</SelectTrigger>
 							<SelectContent>
