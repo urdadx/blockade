@@ -20,7 +20,7 @@ import {
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/empty";
 import { Input } from "@/components/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/tabs";
-import { cn, getWebsiteFaviconUrl } from "@/lib/utils";
+import { getWebsiteFaviconUrl } from "@/lib/utils";
 import { PlusIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -62,6 +62,8 @@ const websites = Array.from(new Set(categories.flatMap((category) => category.do
 	(a, b) => a.localeCompare(b),
 );
 
+const adultDomains = new Set(categories.find((category) => category.id === "adult")?.domains ?? []);
+
 function AddOption({
 	id,
 	label,
@@ -76,17 +78,29 @@ function AddOption({
 	onToggle: (id: string) => void;
 }) {
 	return (
-		<div className="flex min-w-0 items-center gap-2 rounded-lg border bg-white p-2.5 transition-colors hover:bg-muted/40">
-			<img src={image} alt="" className="size-9 shrink-0 rounded-md object-cover" />
+		<div className="flex min-w-0 items-center gap-2 rounded-lg border bg-card p-2.5 transition-colors duration-150 hover:bg-muted/40">
+			<img
+				src={image}
+				alt=""
+				loading="lazy"
+				decoding="async"
+				className="size-9 shrink-0 rounded-md object-cover outline-1 -outline-offset-1 outline-black/10 dark:outline-white/10"
+			/>
 			<span className="min-w-0 flex-1 truncate text-sm font-medium">{label}</span>
-			<Button
-				type="button"
-				variant={selected ? "secondary" : "outline"}
-				className={cn(selected && "text-primary")}
-				aria-label={`${selected ? "Remove" : "Add"} ${label}`}
-				onClick={() => onToggle(id)}>
-				{selected ? <CheckMarkIcon color="green" /> : <PlusIcon />}
-			</Button>
+			{selected ? (
+				<div className="flex h-9 w-9 items-center justify-center">
+					<CheckMarkIcon color="green" />
+				</div>
+			) : (
+				<Button
+					type="button"
+					variant="outline"
+					className="text-foreground/80 hover:bg-transparent hover:text-foreground"
+					aria-label="Add"
+					onClick={() => onToggle(id)}>
+					<PlusIcon />
+				</Button>
+			)}
 		</div>
 	);
 }
@@ -137,7 +151,7 @@ export function AddBlockListDialog({ className }: { className?: string }) {
 	};
 
 	const categoryGrid = (
-		<div className="grid grid-cols-2 gap-2">
+		<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
 			{filteredCategories.map((category) => (
 				<AddOption
 					key={category.id}
@@ -152,7 +166,7 @@ export function AddBlockListDialog({ className }: { className?: string }) {
 	);
 
 	const websiteGrid = (
-		<div className="grid grid-cols-2 gap-2">
+		<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
 			{filteredWebsites.map((domain) => (
 				<AddOption
 					key={domain}
@@ -166,6 +180,23 @@ export function AddBlockListDialog({ className }: { className?: string }) {
 		</div>
 	);
 
+	const allTabWebsiteGrid = (
+		<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+			{filteredWebsites
+				.filter((domain) => !adultDomains.has(domain))
+				.map((domain) => (
+					<AddOption
+						key={domain}
+						id={`website:${domain}`}
+						label={domain}
+						image={getWebsiteFaviconUrl(domain)}
+						selected={selectedItems.has(`website:${domain}`)}
+						onToggle={toggleItem}
+					/>
+				))}
+		</div>
+	);
+
 	return (
 		<Dialog>
 			<DialogTrigger render={<Button className={className} />}>
@@ -174,7 +205,7 @@ export function AddBlockListDialog({ className }: { className?: string }) {
 			</DialogTrigger>
 			<DialogContent className="flex onboarding-height max-w-xl flex-col gap-4 overflow-hidden p-0 sm:max-w-4xl">
 				<DialogHeader className="px-6 pt-6 pr-14">
-					<DialogTitle className="font-display font-semibold text-xl">
+					<DialogTitle className="font-display font-semibold text-2xl">
 						Add to block list
 					</DialogTitle>
 					<DialogDescription>
@@ -188,7 +219,7 @@ export function AddBlockListDialog({ className }: { className?: string }) {
 						value={query}
 						onChange={(event) => setQuery(event.target.value)}
 						placeholder="Search categories, websites, or keywords..."
-						className="w-full bg-white pl-10"
+						className="w-full bg-background pl-10"
 					/>
 				</div>
 
@@ -224,7 +255,7 @@ export function AddBlockListDialog({ className }: { className?: string }) {
 								<h3 className="mb-2 text-lg font-semibold">
 									Websites
 								</h3>
-								{websiteGrid}
+								{allTabWebsiteGrid}
 							</section>
 							<section>
 								<h3 className="mb-2 text-lg font-semibold">

@@ -1,5 +1,6 @@
 import { AlertLinear } from "@/assets/icons/alert-icon";
 import { FireOutline } from "@/assets/icons/fire";
+import { GlobeLinear } from "@/assets/icons/globe-icon";
 import { MedalOutline } from "@/assets/icons/medal";
 import { TimerOutline } from "@/assets/icons/timer";
 import { TriangleDown, TriangleUp } from "@/assets/icons/triangle-icon";
@@ -62,6 +63,7 @@ export function MetricCard({
 	blocksTriggered,
 	currentStreak,
 	focusScore,
+	topBlocked,
 	className,
 }: MetricCardProps) {
 	const metrics: MetricItem[] = [
@@ -89,13 +91,19 @@ export function MetricCard({
 			iconClassName: "text-amber-500",
 			...focusScore,
 		},
+		{
+			label: "Top blocked",
+			icon: GlobeLinear,
+			iconClassName: "text-violet-500",
+			...topBlocked,
+		},
 	];
 
 	return (
 		<section
 			aria-label="Focus metrics"
 			className={cn(
-				"grid grid-cols-2 gap-y-5 rounded-lg border border-border bg-card px-4 py-5 sm:grid-cols-3 lg:grid-cols-4",
+				"grid grid-cols-2 gap-y-5 rounded-lg border border-border bg-card px-4 py-5 sm:grid-cols-3 lg:grid-cols-5",
 				className,
 			)}>
 			{metrics.map(({ label, icon: Icon, value, trend }) => (
@@ -104,12 +112,12 @@ export function MetricCard({
 						<Icon
 							aria-hidden="true"
 							color="currentColor"
-							className={cn("size-5 shrink-0", "")}
+							className={cn("size-5 shrink-0")}
 						/>
 						<span className="truncate text-sm">{label}</span>
 					</div>
 					<div className="mt-1 flex min-w-0 items-baseline gap-1.5">
-						<strong className="truncate text-xl font-display font-semibold leading-tight tracking-tight text-foreground">
+						<strong className="truncate text-xl font-display font-semibold leading-tight tracking-tight text-foreground tabular-nums">
 							{value}
 						</strong>
 						<TrendIndicator trend={trend} />

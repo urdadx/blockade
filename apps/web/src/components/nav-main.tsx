@@ -39,7 +39,7 @@ export function NavMain({
 	const shortcuts: Record<string, string> = {
 		"Block List": "B",
 		Insights: "I",
-		"Focus Mode": "F",
+		Settings: "S",
 	};
 
 	return (
@@ -51,38 +51,45 @@ export function NavMain({
 					return (
 						<div key={item.title}>
 							<SidebarMenuItem>
-								<Link
-									to={item.url}
-									className="w-full"
-									onClick={handleLinkClick}>
-									<SidebarMenuButton
-										tooltip={item.title}
+								<SidebarMenuButton
+									render={
+										<Link
+											to={item.url}
+											aria-current={
+												isMainItemActive
+													? "page"
+													: undefined
+											}
+											onClick={handleLinkClick}
+										/>
+									}
+									isActive={isMainItemActive}
+									tooltip={item.title}
+									className={
+										isMainItemActive
+											? activeItemClassName
+											: itemClassName
+									}>
+									{item.icon && (
+										<item.icon
+											color="currentColor"
+											className={iconClassName}
+										/>
+									)}
+									<span
 										className={
 											isMainItemActive
-												? activeItemClassName
-												: itemClassName
+												? "font-medium"
+												: ""
 										}>
-										{item.icon && (
-											<item.icon
-												color="currentColor"
-												className={iconClassName}
-											/>
-										)}
-										<span
-											className={
-												isMainItemActive
-													? "text-black font-medium"
-													: ""
-											}>
-											{item.title}
-										</span>
-										{shortcuts[item.title] && (
-											<Kbd className="ml-auto bg-white border  group-data-[collapsible=icon]:hidden">
-												{shortcuts[item.title]}
-											</Kbd>
-										)}
-									</SidebarMenuButton>
-								</Link>
+										{item.title}
+									</span>
+									{shortcuts[item.title] && (
+										<Kbd className="ml-auto border bg-background group-data-[collapsible=icon]:hidden">
+											{shortcuts[item.title]}
+										</Kbd>
+									)}
+								</SidebarMenuButton>
 								<div className="">
 									{item.items?.map((subItem) => {
 										const isSubItemActive =
@@ -91,26 +98,33 @@ export function NavMain({
 										return (
 											<SidebarMenuButton
 												key={subItem.title}
+												render={
+													<Link
+														to={subItem.url}
+														aria-current={
+															isSubItemActive
+																? "page"
+																: undefined
+														}
+														onClick={
+															handleLinkClick
+														}
+													/>
+												}
+												isActive={isSubItemActive}
 												className={
 													isSubItemActive
 														? activeItemClassName
 														: itemClassName
 												}>
-												<Link
-													to={subItem.url}
-													className="w-full"
-													onClick={
-														handleLinkClick
+												<span
+													className={
+														isSubItemActive
+															? "font-medium"
+															: ""
 													}>
-													<span
-														className={
-															isSubItemActive
-																? "text-black font-medium"
-																: ""
-														}>
-														{subItem.title}
-													</span>
-												</Link>
+													{subItem.title}
+												</span>
 											</SidebarMenuButton>
 										);
 									})}

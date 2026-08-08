@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
-import { AnimatePresence, motion } from "motion/react"
-import { useState } from "react"
-import { useCommonChart } from "./common-context"
-import { cn } from "./lib"
-import { rgb } from "./palette"
+import { AnimatePresence, motion } from "motion/react";
+import { useState } from "react";
+import { useCommonChart } from "./common-context";
+import { cn } from "./lib";
+import { rgb } from "./palette";
 
-export type TooltipVariant = "default" | "frosted-glass"
+export type TooltipVariant = "default" | "frosted-glass";
 
 const VARIANT: Record<TooltipVariant, string> = {
-  default: "bg-white",
-  "frosted-glass": "bg-white backdrop-blur-sm",
-}
+  default: "bg-popover",
+  "frosted-glass": "bg-popover/90 backdrop-blur-sm",
+};
 
 /**
  * Floating hover tooltip. Reads the shared common context so it works in every
@@ -23,23 +23,23 @@ export function Tooltip({
   valueFormatter,
   variant = "default",
 }: {
-  labelKey?: string
-  valueFormatter?: (value: number, name: string) => string
-  variant?: TooltipVariant
+  labelKey?: string;
+  valueFormatter?: (value: number, name: string) => string;
+  variant?: TooltipVariant;
 }) {
-  const chart = useCommonChart()
-  const show = chart.ready && chart.hoverIndex != null
+  const chart = useCommonChart();
+  const show = chart.ready && chart.hoverIndex != null;
 
   // Retain the last hovered index so the card keeps its content while fading
   // out — adjust-state-during-render (no refs in render).
-  const [lastIndex, setLastIndex] = useState(0)
+  const [lastIndex, setLastIndex] = useState(0);
   if (chart.hoverIndex != null && chart.hoverIndex !== lastIndex) {
-    setLastIndex(chart.hoverIndex)
+    setLastIndex(chart.hoverIndex);
   }
-  const index = chart.hoverIndex ?? lastIndex
+  const index = chart.hoverIndex ?? lastIndex;
 
-  const heading = chart.heading(index, labelKey)
-  const items = chart.itemsAt(index)
+  const heading = chart.heading(index, labelKey);
+  const items = chart.itemsAt(index);
 
   return (
     <AnimatePresence>
@@ -69,13 +69,11 @@ export function Tooltip({
           }}
           className={cn(
             "pointer-events-none absolute z-10 rounded-md border px-2 py-1 shadow-sm",
-            VARIANT[variant]
+            VARIANT[variant],
           )}
         >
           {heading && (
-            <div className="mb-0.5 font-mono text-[10px] text-muted-foreground">
-              {heading}
-            </div>
+            <div className="mb-0.5 font-mono text-[10px] text-muted-foreground">{heading}</div>
           )}
           <div className="flex flex-col gap-0.5">
             {items.map((item) => (
@@ -100,7 +98,7 @@ export function Tooltip({
         </motion.div>
       )}
     </AnimatePresence>
-  )
+  );
 }
 
-Tooltip.chartLayer = "dom" as const
+Tooltip.chartLayer = "dom" as const;

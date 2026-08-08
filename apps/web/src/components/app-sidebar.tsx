@@ -29,11 +29,11 @@ const data = {
 			url: "/insights",
 			icon: ChartIcon,
 		},
-		{
-			title: "Focus Mode",
-			url: "/focus-mode",
-			icon: BoltIcon,
-		},
+		// {
+		// 	title: "Redirect Page",
+		// 	url: "/redirect-page",
+		// 	icon: BoltIcon,
+		// },
 
 		{
 			title: "Settings",

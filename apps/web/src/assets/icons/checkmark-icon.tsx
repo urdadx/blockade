@@ -5,8 +5,8 @@ export function CheckMarkIcon(props: SVGProps<SVGSVGElement>) {
 	return (
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
-			width="1em"
-			height="1em"
+			width="1.5em"
+			height="1.5emem"
 			viewBox="0 0 24 24"
 			{...props}>
 			<path

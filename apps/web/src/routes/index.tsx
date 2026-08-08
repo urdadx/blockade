@@ -8,8 +8,8 @@ export const Route = createFileRoute("/")({
 function HomeComponent() {
 	return (
 		<div className="container mx-auto max-w-3xl px-4 py-2">
-			<Link to="/block-sites">
-				<Button>Go to block sites</Button>
+			<Link to="/block-list">
+				<Button>Go to block lists</Button>
 			</Link>
 		</div>
 	);
