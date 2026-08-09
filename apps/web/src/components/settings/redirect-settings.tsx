@@ -42,7 +42,7 @@ export function RedirectSettings() {
 					Background images
 				</h3>
 			</div>
-			<div className="grid w-full grid-cols-3 gap-3 sm:max-w-4xl sm:grid-cols-6 sm:gap-6">
+			<div className="grid w-full grid-cols-3 gap-3 sm:max-w-3xl sm:grid-cols-9 sm:gap-6">
 				{backgrounds.map(([fileName, src]) => {
 					const name = fileName.split("/").pop()?.replace(".avif", "");
 					return (
@@ -51,7 +51,7 @@ export function RedirectSettings() {
 							type="button"
 							aria-label={`Use ${name} background`}
 							className={cn(
-								"group relative aspect-square w-full overflow-hidden rounded-md border bg-muted transition-colors hover:border-primary sm:size-34",
+								"group relative aspect-square w-full overflow-hidden rounded-md border bg-muted transition-colors hover:border-primary sm:size-20",
 							)}>
 							<img
 								src={src}
