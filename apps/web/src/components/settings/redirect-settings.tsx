@@ -11,7 +11,7 @@ const backgrounds = Object.entries(backgroundImages).sort(([a], [b]) => a.locale
 
 export function RedirectSettings() {
 	return (
-		<div className="flex flex-col gap-2 p-6 lg:items-start">
+		<div className="flex flex-col gap-2 p-5 lg:items-start">
 			<div className="flex w-full pb-0 sm:pb-3 flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
 				<div className="space-y-2">
 					<h3 className="text-lg font-semibold tracking-tight text-foreground">
@@ -31,18 +31,12 @@ export function RedirectSettings() {
 				</span>
 				<Switch checked={true} className="shrink-0" />
 			</div>
-			<div className="flex w-full items-center justify-between gap-3 pt-4 pb-2">
-				<span className="min-w-0 flex-1 text-sm text-foreground">
-					Enable background dither effect
-				</span>
-				<Switch checked={true} className="shrink-0" />
-			</div>
 			<div className="space-y-2 w-full pt-3">
 				<h3 className="text-lg font-semibold tracking-tight text-foreground">
 					Background images
 				</h3>
 			</div>
-			<div className="grid w-full grid-cols-3 gap-3 sm:max-w-3xl sm:grid-cols-9 sm:gap-6">
+			<div className="grid w-full grid-cols-3 gap-3 sm:max-w-5xl sm:grid-cols-12 sm:gap-4">
 				{backgrounds.map(([fileName, src]) => {
 					const name = fileName.split("/").pop()?.replace(".avif", "");
 					return (

@@ -5,6 +5,14 @@ import { TimerIcon } from "@/assets/icons/timer";
 export function PomodoroSettings() {
 	const durationLengths = [
 		{
+			label: "5 min",
+			value: "5"
+		},
+		{
+			label: "10 min",
+			value: "10"
+		},
+		{
 			label: "15 min",
 			value: "15",
 		},
@@ -87,7 +95,7 @@ export function PomodoroSettings() {
 							<SleepIcon className="shrink-0" />
 							Default break duration
 						</span>
-						<Select items={durationLengths} defaultValue="25">
+						<Select items={durationLengths} defaultValue="5">
 							<SelectTrigger className="w-full sm:w-45">
 								<SelectValue placeholder="Select a duration" />
 							</SelectTrigger>

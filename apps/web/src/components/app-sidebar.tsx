@@ -8,6 +8,7 @@ import {
 	SidebarProvider,
 } from "@/components/sidebar";
 import { Outlet } from "@tanstack/react-router";
+import { Navbar } from "@/components/navbar";
 import { ChartIcon } from "@/assets/icons/chart-icon";
 import { SettingsIcon } from "@/assets/icons/settings-duotone";
 
@@ -61,6 +62,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				</SidebarFooter>
 			</Sidebar>
 			<SidebarInset className="min-h-0 bg-[#FCFCFC] min-w-0 flex flex-col overflow-x-hidden">
+				<Navbar />
 				<div className="flex-1 min-w-0  overflow-y-auto overflow-x-hidden">
 					<Outlet />
 				</div>

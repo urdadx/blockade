@@ -2,7 +2,6 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/sonner";
 import type { trpc } from "@/utils/trpc";
 import type { QueryClient } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { HeadContent, Outlet, createRootRouteWithContext } from "@tanstack/react-router";
 import "../index.css";
 
@@ -46,7 +45,6 @@ function RootComponent() {
 				</div>
 				<Toaster richColors />
 			</ThemeProvider>
-			<ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
 		</>
 	);
 }
