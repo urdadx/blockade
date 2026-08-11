@@ -16,7 +16,6 @@ import { NavUser } from "./nav-user";
 import { NavMain } from "./nav-main";
 import { LockIcon } from "@/assets/icons/lock";
 import { BrandLogo } from "./brand-logo";
-import { BoltIcon } from "@/assets/icons/bolt-icon";
 
 const data = {
 	overview: [
@@ -30,12 +29,6 @@ const data = {
 			url: "/insights",
 			icon: ChartIcon,
 		},
-		// {
-		// 	title: "Redirect Page",
-		// 	url: "/redirect-page",
-		// 	icon: BoltIcon,
-		// },
-
 		{
 			title: "Settings",
 			url: "/settings",

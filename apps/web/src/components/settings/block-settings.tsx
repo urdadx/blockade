@@ -30,7 +30,7 @@ export function BlockSettings() {
 					</h3>
 					<p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
 						Customize your block settings to control how websites are
-						blocked and password protection
+						blocked with password protection
 					</p>
 				</div>
 			</div>
