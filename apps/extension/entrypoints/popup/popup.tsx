@@ -86,7 +86,7 @@ export function Popup() {
 			) : site ? (
 				<>
 					<section className={`decision-card ${isBlocked ? "is-blocked" : ""}`}>
-						<div className="decision-favicon">
+						<div className="decision-favicon favicon-wrap">
 							{site.faviconUrl ? (
 								<img src={site.faviconUrl} alt="" />
 							) : (

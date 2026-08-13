@@ -2,7 +2,17 @@ import { BlockSettings } from "@/components/settings/block-settings";
 import { PomodoroSettings } from "@/components/settings/pomodoro-settings";
 import { RedirectSettings } from "@/components/settings/redirect-settings";
 
-export function SettingsPage() {
+export function SettingsPage({
+  sessionDuration,
+  breakDuration,
+  onSessionDurationChange,
+  onBreakDurationChange,
+}: {
+  sessionDuration?: number;
+  breakDuration?: number;
+  onSessionDurationChange?: (minutes: number) => void;
+  onBreakDurationChange?: (minutes: number) => void;
+} = {}) {
   return (
     <main className="mx-auto w-full max-w-7xl p-3 sm:p-4 md:p-5">
       <header className="flex flex-col gap-1 pb-6">
@@ -13,7 +23,12 @@ export function SettingsPage() {
       </header>
       <div className="bg-card divide-y px-5 py-2 rounded-lg border text-card-foreground">
         <BlockSettings />
-        <PomodoroSettings />
+        <PomodoroSettings
+          sessionDuration={sessionDuration}
+          breakDuration={breakDuration}
+          onSessionDurationChange={onSessionDurationChange}
+          onBreakDurationChange={onBreakDurationChange}
+        />
         <RedirectSettings />
       </div>
     </main>

@@ -10,10 +10,12 @@ import {
   subscribeToFocusTodos,
   toggleFocusTodo,
 } from "../../lib/focus-todos-storage";
+import { usePomodoroSettings } from "../../hooks/use-pomodoro-settings";
 import "./style.css";
 
 function ExtensionRedirectPage() {
   const [todos, setTodos] = useState<FocusTodo[]>([]);
+  const pomodoroSettings = usePomodoroSettings();
 
   useEffect(() => {
     let active = true;
@@ -34,6 +36,8 @@ function ExtensionRedirectPage() {
   return (
     <RedirectPage
       todos={todos}
+      sessionDuration={pomodoroSettings.sessionDuration}
+      breakDuration={pomodoroSettings.breakDuration}
       onAddTodo={(title) => void addFocusTodo(title)}
       onToggleTodo={(id) => void toggleFocusTodo(id)}
       onDeleteTodo={(id) => void deleteFocusTodo(id)}

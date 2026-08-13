@@ -142,7 +142,9 @@ button {
   height: 40px;
   place-items: center;
   color: var(--primary);
-  background: #fafafa;
+  background: #f0efef;
+  border: 1px solid var(--border);
+  border-radius: 10px;
 }
 
 .favicon-wrap img {

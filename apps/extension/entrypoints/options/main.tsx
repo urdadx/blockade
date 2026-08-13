@@ -23,6 +23,7 @@ import { SettingsPage } from "../../../web/src/components/settings-page";
 import { categoryImages } from "../../../web/src/data/category-images";
 import { useBlockingSettings } from "../../hooks/use-blocking-settings";
 import { useAnalyticsState } from "../../hooks/use-analytics-state";
+import { usePomodoroSettings } from "../../hooks/use-pomodoro-settings";
 import {
   blockDomain,
   blockKeyword,
@@ -31,6 +32,7 @@ import {
   unblockDomain,
   unblockKeyword,
 } from "../../lib/blocking-storage";
+import { updatePomodoroSettings } from "../../lib/pomodoro-settings-storage";
 import "./style.css";
 
 function DashboardLayout() {
@@ -147,6 +149,20 @@ function ExtensionInsightsPage() {
   return <InsightsPage days={days} />;
 }
 
+function ExtensionSettingsPage() {
+  const settings = usePomodoroSettings();
+  return (
+    <SettingsPage
+      sessionDuration={settings.sessionDuration}
+      breakDuration={settings.breakDuration}
+      onSessionDurationChange={(sessionDuration) =>
+        void updatePomodoroSettings({ sessionDuration })
+      }
+      onBreakDurationChange={(breakDuration) => void updatePomodoroSettings({ breakDuration })}
+    />
+  );
+}
+
 const rootRoute = createRootRoute({ component: DashboardLayout });
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -168,7 +184,7 @@ const insightsRoute = createRoute({
 const settingsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/settings",
-  component: SettingsPage,
+  component: ExtensionSettingsPage,
 });
 const routeTree = rootRoute.addChildren([indexRoute, blockListRoute, insightsRoute, settingsRoute]);
 const router = createRouter({ routeTree, history: createHashHistory() });
