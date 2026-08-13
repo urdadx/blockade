@@ -1,0 +1,8 @@
+{
+  "extends": "@blockade/config/tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM"],
+    "types": []
+  },
+  "include": ["src"]
+}

@@ -1,4 +1,5 @@
 # blockade
+
 Blockade is a chrome extension that blocks distracting websites so you can regain your focus.
 
 ## Features
@@ -15,6 +16,7 @@ Blockade is a chrome extension that blocks distracting websites so you can regai
 - **Authentication** - Better-Auth
 - **Oxlint** - Oxlint + Oxfmt (linting & formatting)
 - **PWA** - Progressive Web App support
+- **WXT** - Chrome extension framework
 
 ## Getting Started
 
@@ -48,8 +50,16 @@ Then, run the development server:
 pnpm run dev
 ```
 
-Open [http://localhost:3001](http://localhost:3001) in your browser to see the web application.
+Open [http://localhost:3001](http://localhost:3001) in your browser to see the public web application.
 The API is running at [http://localhost:3000](http://localhost:3000).
+
+To develop the Chrome extension separately, run:
+
+```bash
+pnpm run dev:extension
+```
+
+WXT opens a Chrome profile with the extension loaded. The operational dashboard is available from the extension popup and stores its block list locally in browser storage. If Chrome is installed in a non-standard location, configure its path in `apps/extension/web-ext.config.ts` using WXT's `binaries.chrome` option. Production extension files are generated in `apps/extension/.output` by `pnpm run build:extension`.
 
 ## UI Customization
 
@@ -102,6 +112,7 @@ For more details, see the guide on [Deploying with Docker Compose](https://www.b
 blockade/
 ├── apps/
 │   ├── web/         # Frontend application (React + TanStack Router)
+│   ├── extension/   # Chrome extension (WXT + React)
 │   └── server/      # Backend API (Hono, TRPC)
 ├── packages/
 │   ├── ui/          # Shared shadcn/ui components and styles
@@ -116,6 +127,9 @@ blockade/
 - `pnpm run build`: Build all applications
 - `pnpm run dev:web`: Start only the web application
 - `pnpm run dev:server`: Start only the server
+- `pnpm run dev:extension`: Start the Chrome extension in development mode
+- `pnpm run build:extension`: Build the Chrome extension
+- `pnpm run zip:extension`: Package the Chrome extension for distribution
 - `pnpm run check-types`: Check TypeScript types across all apps
 - `pnpm run db:push`: Push schema changes to database
 - `pnpm run db:generate`: Generate database client/types

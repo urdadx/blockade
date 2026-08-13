@@ -6,10 +6,13 @@ node_modules
 # Build outputs
 dist
 build
+.output
+.wxt
 *.tsbuildinfo
 
 # Generated files
 apps/web/src/routeTree.gen.ts
+apps/extension/web-ext.config.ts
 
 # Environment variables
 .env

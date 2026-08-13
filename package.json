@@ -1,17 +1,20 @@
 {
   "name": "blockade",
   "private": true,
-  "type": "module",
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
+  "type": "module",
   "scripts": {
     "dev": "pnpm -r dev",
     "build": "pnpm -r build",
     "check-types": "pnpm -r check-types",
     "dev:web": "pnpm --filter web dev",
     "dev:server": "pnpm --filter server dev",
+    "dev:extension": "pnpm --filter extension dev",
+    "build:extension": "pnpm --filter extension build",
+    "zip:extension": "pnpm --filter extension zip",
     "db:push": "pnpm --filter @blockade/db db:push",
     "db:studio": "pnpm --filter @blockade/db db:studio",
     "db:generate": "pnpm --filter @blockade/db db:generate",
@@ -23,17 +26,17 @@
     "docker:logs": "docker compose logs -f",
     "check": "oxlint && oxfmt --write"
   },
-  "packageManager": "pnpm@10.10.0",
   "dependencies": {
+    "@blockade/env": "workspace:*",
     "dotenv": "catalog:",
-    "zod": "catalog:",
-    "@blockade/env": "workspace:*"
+    "zod": "catalog:"
   },
   "devDependencies": {
-    "typescript": "catalog:",
-    "@types/node": "catalog:",
     "@blockade/config": "workspace:*",
+    "@types/node": "catalog:",
+    "oxfmt": "^0.57.0",
     "oxlint": "^1.72.0",
-    "oxfmt": "^0.57.0"
-  }
+    "typescript": "catalog:"
+  },
+  "packageManager": "pnpm@10.10.0"
 }

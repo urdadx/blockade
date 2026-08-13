@@ -1,11 +1,5 @@
-import adultImage from "@/assets/categories/18plus.png";
-import gamblingImage from "@/assets/categories/gambling.png";
-import newsImage from "@/assets/categories/news.png";
-import shoppingImage from "@/assets/categories/shopping.png";
-import socialImage from "@/assets/categories/socials.png";
-import sportsImage from "@/assets/categories/sports.png";
 import { CheckMarkIcon } from "@/assets/icons/checkmark-icon";
-import { SearchLinear } from "@/assets/icons/search-icon";
+import { SearchIcon, SearchLinear } from "@/assets/icons/search-icon";
 import { Button } from "@/components/button";
 import {
 	Dialog,
@@ -17,11 +11,13 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/dialog";
-import { Empty, EmptyHeader, EmptyTitle } from "@/components/empty";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/empty";
 import { Input } from "@/components/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/tabs";
 import { getWebsiteFaviconUrl } from "@/lib/utils";
-import { PlusIcon } from "lucide-react";
+import { categoryImages } from "@/data/category-images";
+import { blockCategories, normalizeKeyword, normalizeWebsiteDomain } from "@blockade/core";
+import { PlusIcon, TagIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 
 type CategoryDataset = {
@@ -30,11 +26,6 @@ type CategoryDataset = {
 	description: string;
 	domains: string[];
 };
-
-const categoryModules = import.meta.glob<CategoryDataset>("/src/data/block-categories/*.json", {
-	eager: true,
-	import: "default",
-});
 
 const categoryOrder: CategoryDataset["id"][] = [
 	"adult",
@@ -45,18 +36,9 @@ const categoryOrder: CategoryDataset["id"][] = [
 	"gambling",
 ];
 
-const categoryImages: Record<CategoryDataset["id"], string> = {
-	adult: adultImage,
-	social: socialImage,
-	news: newsImage,
-	sports: sportsImage,
-	shopping: shoppingImage,
-	gambling: gamblingImage,
-};
-
-const categories = Object.values(categoryModules).sort(
-	(a, b) => categoryOrder.indexOf(a.id) - categoryOrder.indexOf(b.id),
-);
+const categories: CategoryDataset[] = blockCategories
+	.map((category) => ({ ...category, domains: [...category.domains] }))
+	.sort((a, b) => categoryOrder.indexOf(a.id) - categoryOrder.indexOf(b.id));
 
 const websites = Array.from(new Set(categories.flatMap((category) => category.domains))).sort(
 	(a, b) => a.localeCompare(b),
@@ -68,63 +50,98 @@ function AddOption({
 	id,
 	label,
 	image,
+	icon,
 	selected,
 	onToggle,
 }: {
 	id: string;
 	label: string;
-	image: string;
+	image?: string;
+	icon?: React.ReactNode;
 	selected: boolean;
 	onToggle: (id: string) => void;
 }) {
 	return (
 		<div className="flex min-w-0 items-center gap-2 rounded-lg border bg-card p-2.5 transition-colors duration-150 hover:bg-muted/40">
-			<img
-				src={image}
-				alt=""
-				loading="lazy"
-				decoding="async"
-				className="size-9 shrink-0 rounded-md object-cover outline-1 -outline-offset-1 outline-black/10 dark:outline-white/10"
-			/>
-			<span className="min-w-0 flex-1 truncate text-sm font-medium">{label}</span>
-			{selected ? (
-				<div className="flex h-9 w-9 items-center justify-center">
-					<CheckMarkIcon color="green" />
-				</div>
+			{image ? (
+				<img
+					src={image}
+					alt=""
+					loading="lazy"
+					decoding="async"
+					className="size-9 shrink-0 rounded-md object-cover outline-1 -outline-offset-1 outline-black/10 dark:outline-white/10"
+				/>
 			) : (
-				<Button
-					type="button"
-					variant="outline"
-					className="text-foreground/80 hover:bg-transparent hover:text-foreground"
-					aria-label="Add"
-					onClick={() => onToggle(id)}>
-					<PlusIcon />
-				</Button>
+				<div className="grid size-9 shrink-0 place-items-center rounded-md bg-muted text-muted-foreground">
+					{icon}
+				</div>
 			)}
+			<span className="min-w-0 flex-1 truncate text-sm font-medium">{label}</span>
+			<Button
+				type="button"
+				variant={selected ? "ghost" : "outline"}
+				className="text-foreground/80 hover:bg-transparent hover:text-foreground"
+				aria-label={selected ? `Remove ${label} from selection` : `Select ${label}`}
+				onClick={() => onToggle(id)}>
+				{selected ? <CheckMarkIcon color="green" /> : <PlusIcon />}
+			</Button>
 		</div>
 	);
 }
 
-function EmptyKeywords() {
+function NoResults({
+	query,
+	website,
+	keyword,
+	onSelect,
+}: {
+	query: string;
+	website?: string | null;
+	keyword?: string | null;
+	onSelect: (id: string) => void;
+}) {
 	return (
-		<Empty className="min-h-36 border rounded-xl">
+		<Empty className="min-h-48 rounded-xl border">
 			<EmptyHeader>
-				<EmptyTitle className="font-display text-lg text-foreground">
-					No keywords added yet
+				<SearchIcon className="size-8 text-muted-foreground" />
+				<EmptyTitle className="font-display text-lg font-semibold text-foreground">
+					No item found
 				</EmptyTitle>
-				<Button variant="default">
-					<PlusIcon />
-					Add new keywords
-				</Button>
+				<EmptyDescription>No existing item matches “{query}”</EmptyDescription>
+				<div className="mt-2 flex flex-wrap justify-center gap-2">
+					{website && (
+						<Button
+							type="button"
+							onClick={() => onSelect(`website:${website}`)}>
+							<PlusIcon /> Add {website} as website
+						</Button>
+					)}
+					{keyword && (
+						<Button
+							type="button"
+							variant={website ? "outline" : "default"}
+							onClick={() => onSelect(`keyword:${keyword}`)}>
+							<TagIcon /> Add “{keyword}” as keyword
+						</Button>
+					)}
+				</div>
 			</EmptyHeader>
 		</Empty>
 	);
 }
 
-export function AddBlockListDialog({ className }: { className?: string }) {
+export function AddBlockListDialog({
+	className,
+	onAdd,
+}: {
+	className?: string;
+	onAdd?: (items: string[]) => void | Promise<void>;
+}) {
 	const [query, setQuery] = useState("");
 	const [selectedItems, setSelectedItems] = useState<Set<string>>(() => new Set());
 	const normalizedQuery = query.trim().toLowerCase();
+	const customWebsite = normalizeWebsiteDomain(query);
+	const customKeyword = customWebsite ? null : normalizeKeyword(query);
 
 	const filteredCategories = useMemo(
 		() =>
@@ -148,6 +165,11 @@ export function AddBlockListDialog({ className }: { className?: string }) {
 			else next.add(id);
 			return next;
 		});
+	};
+
+	const addSelectedItems = () => {
+		void onAdd?.([...selectedItems]);
+		setSelectedItems(new Set());
 	};
 
 	const categoryGrid = (
@@ -180,6 +202,29 @@ export function AddBlockListDialog({ className }: { className?: string }) {
 		</div>
 	);
 
+	const keywordGrid = customKeyword ? (
+		<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+			<AddOption
+				id={`keyword:${customKeyword}`}
+				label={customKeyword}
+				icon={<TagIcon className="size-4" />}
+				selected={selectedItems.has(`keyword:${customKeyword}`)}
+				onToggle={toggleItem}
+			/>
+		</div>
+	) : (
+		<Empty className="min-h-36 rounded-xl border">
+			<EmptyHeader>
+				<EmptyTitle className="font-display text-lg font-semibold text-foreground">
+					Search for a keyword
+				</EmptyTitle>
+				<EmptyDescription>
+					Enter at least two characters to create a keyword block rule.
+				</EmptyDescription>
+			</EmptyHeader>
+		</Empty>
+	);
+
 	const allTabWebsiteGrid = (
 		<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
 			{filteredWebsites
@@ -196,6 +241,15 @@ export function AddBlockListDialog({ className }: { className?: string }) {
 				))}
 		</div>
 	);
+	const hasAnySearchResults = filteredCategories.length > 0 || filteredWebsites.length > 0;
+	const noResults = normalizedQuery ? (
+		<NoResults
+			query={query.trim()}
+			website={customWebsite}
+			keyword={customKeyword}
+			onSelect={toggleItem}
+		/>
+	) : null;
 
 	return (
 		<Dialog>
@@ -244,48 +298,59 @@ export function AddBlockListDialog({ className }: { className?: string }) {
 					<TabsContent
 						value="all"
 						className="mt-0 min-h-0 flex-1 overflow-y-auto px-6 pb-6">
-						<div className="space-y-5 pt-3">
-							<section>
-								<h3 className="mb-2 text-lg font-semibold">
-									Categories
-								</h3>
-								{categoryGrid}
-							</section>
-							<section>
-								<h3 className="mb-2 text-lg font-semibold">
-									Websites
-								</h3>
-								{allTabWebsiteGrid}
-							</section>
-							<section>
-								<h3 className="mb-2 text-lg font-semibold">
-									Keywords
-								</h3>
-								<EmptyKeywords />
-							</section>
-						</div>
+						{normalizedQuery && !hasAnySearchResults ? (
+							<div className="pt-3">{noResults}</div>
+						) : (
+							<div className="space-y-5 pt-3">
+								{filteredCategories.length > 0 && (
+									<section>
+										<h3 className="mb-2 text-lg font-semibold">
+											Categories
+										</h3>
+										{categoryGrid}
+									</section>
+								)}
+								{filteredWebsites.length > 0 && (
+									<section>
+										<h3 className="mb-2 text-lg font-semibold">
+											Websites
+										</h3>
+										{allTabWebsiteGrid}
+									</section>
+								)}
+							</div>
+						)}
 					</TabsContent>
 					<TabsContent
 						value="websites"
 						className="mt-0 min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-3">
-						{websiteGrid}
+						{filteredWebsites.length > 0 ? websiteGrid : noResults}
 					</TabsContent>
 					<TabsContent
 						value="keywords"
 						className="mt-0 min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-3">
-						<EmptyKeywords />
+						{keywordGrid}
 					</TabsContent>
 					<TabsContent
 						value="categories"
 						className="mt-0 min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-3">
-						{categoryGrid}
+						{filteredCategories.length > 0 ? categoryGrid : noResults}
 					</TabsContent>
 				</Tabs>
 				<DialogFooter className="px-5 py-4">
 					<DialogClose render={<Button variant="outline" />}>
 						Cancel
 					</DialogClose>
-					<Button type="submit">Add to block list</Button>
+					<DialogClose
+						render={
+							<Button
+								type="button"
+								disabled={selectedItems.size === 0}
+								onClick={addSelectedItems}
+							/>
+						}>
+						Add to block list ({selectedItems.size})
+					</DialogClose>
 				</DialogFooter>
 			</DialogContent>
 		</Dialog>

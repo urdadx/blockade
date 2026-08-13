@@ -1,13 +1,5 @@
 import { Switch } from "../switch";
-import { cn } from "@/lib/utils";
 import { CustomRedirectDialog } from "../custom-redirect-dialog";
-
-const backgroundImages = import.meta.glob<string>("/src/assets/backgrounds/*.avif", {
-	eager: true,
-	import: "default",
-});
-
-const backgrounds = Object.entries(backgroundImages).sort(([a], [b]) => a.localeCompare(b));
 
 export function RedirectSettings() {
 	return (
@@ -30,33 +22,6 @@ export function RedirectSettings() {
 					Show pomodoro timer on redirect page
 				</span>
 				<Switch checked={true} className="shrink-0" />
-			</div>
-			<div className="space-y-2 w-full pt-3">
-				<h3 className="text-lg font-semibold tracking-tight text-foreground">
-					Background images
-				</h3>
-			</div>
-			<div className="grid w-full grid-cols-3 gap-3 sm:max-w-5xl sm:grid-cols-12 sm:gap-4">
-				{backgrounds.map(([fileName, src]) => {
-					const name = fileName.split("/").pop()?.replace(".avif", "");
-					return (
-						<button
-							key={fileName}
-							type="button"
-							aria-label={`Use ${name} background`}
-							className={cn(
-								"group relative aspect-square w-full overflow-hidden rounded-md border bg-muted transition-colors hover:border-primary sm:size-20",
-							)}>
-							<img
-								src={src}
-								alt={name}
-								loading="lazy"
-								decoding="async"
-								className="size-full object-cover"
-							/>
-						</button>
-					);
-				})}
 			</div>
 		</div>
 	);

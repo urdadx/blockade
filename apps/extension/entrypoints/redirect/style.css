@@ -1,0 +1,9 @@
+@import "../../../web/src/index.css";
+@source "../../../web/src";
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background: #000;
+}

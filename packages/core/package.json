@@ -1,0 +1,19 @@
+{
+  "name": "@blockade/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "tldts": "^7.0.16"
+  },
+  "devDependencies": {
+    "@blockade/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}
