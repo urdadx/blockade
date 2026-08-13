@@ -55,7 +55,6 @@ export function PomodoroClock({
 	className,
 	defaultMinutes = 10,
 	stepMinutes = 5,
-	showReadout = true,
 	variant = "dial",
 	classicCaption,
 	onComplete,
@@ -195,7 +194,7 @@ export function PomodoroClock({
 	return (
 		<section
 			className={cn(
-				"w-full max-w-sm rounded-2xl border bg-card p-4 text-foreground",
+				"w-full max-w-[300px] rounded-2xl border bg-card p-4 text-foreground",
 				className,
 			)}
 			aria-label="Pomodoro timer">
