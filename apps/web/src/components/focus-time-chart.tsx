@@ -9,23 +9,24 @@ import { YAxis } from "@/components/dither-kit/y-axis";
 export type FocusTimeDatum = {
   date: string;
   dateLabel: string;
-  focusTime: number;
+  usageMinutes: number;
 };
 
 type FocusTimeChartProps = {
   data: FocusTimeDatum[];
   dateRange: string;
+  periodLabel: string;
 };
 
 const config = {
-  focusTime: {
-    label: "Focus time",
+  usageMinutes: {
+    label: "Distraction usage",
     color: "orange",
   },
 } satisfies ChartConfig;
 
-export function FocusTimeChart({ data, dateRange }: FocusTimeChartProps) {
-  const totalMinutes = data.reduce((total, item) => total + item.focusTime, 0);
+export function FocusTimeChart({ data, dateRange, periodLabel }: FocusTimeChartProps) {
+  const totalMinutes = data.reduce((total, item) => total + item.usageMinutes, 0);
 
   return (
     <section className="flex h-96 min-w-0 flex-col rounded-xl border bg-card px-1 py-5">
@@ -33,7 +34,7 @@ export function FocusTimeChart({ data, dateRange }: FocusTimeChartProps) {
         <div className="flex min-w-0 flex-col gap-1 text-left">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span className="size-2 shrink-0 rounded bg-orange-500" />
-            <span>Weekly focus times</span>
+            <span>Daily distraction usage</span>
           </div>
           <p className="font-display text-2xl font-semibold text-foreground tabular-nums">
             {Math.floor(totalMinutes / 60)}h {totalMinutes % 60}m
@@ -41,7 +42,7 @@ export function FocusTimeChart({ data, dateRange }: FocusTimeChartProps) {
         </div>
         <div className="min-w-0 text-right">
           <p className="text-xs text-muted-foreground">{dateRange}</p>
-          <h3 className="mt-1 font-display text-base font-medium">Last 7 days</h3>
+          <h3 className="mt-1 font-display text-base font-medium">{periodLabel}</h3>
         </div>
       </header>
 
@@ -61,7 +62,7 @@ export function FocusTimeChart({ data, dateRange }: FocusTimeChartProps) {
             variant="frosted-glass"
             valueFormatter={(value) => `${value} min`}
           />
-          <Area dataKey="focusTime" variant="gradient" />
+          <Area dataKey="usageMinutes" variant="gradient" />
         </AreaChart>
       </div>
     </section>

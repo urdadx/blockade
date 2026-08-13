@@ -15,6 +15,7 @@ export type BlockAttemptsDatum = {
 type BlockAttemptsChartProps = {
   data: BlockAttemptsDatum[];
   dateRange: string;
+  periodLabel: string;
 };
 
 const config = {
@@ -24,7 +25,7 @@ const config = {
   },
 } satisfies ChartConfig;
 
-export function BlockAttemptsChart({ data, dateRange }: BlockAttemptsChartProps) {
+export function BlockAttemptsChart({ data, dateRange, periodLabel }: BlockAttemptsChartProps) {
   const totalAttempts = data.reduce((total, item) => total + item.blockAttempts, 0);
 
   return (
@@ -41,7 +42,7 @@ export function BlockAttemptsChart({ data, dateRange }: BlockAttemptsChartProps)
         </div>
         <div className="min-w-0 text-right">
           <p className="text-xs text-muted-foreground">{dateRange}</p>
-          <h3 className="mt-1 font-display text-base font-medium">Last 7 days</h3>
+          <h3 className="mt-1 font-display text-base font-medium">{periodLabel}</h3>
         </div>
       </header>
 

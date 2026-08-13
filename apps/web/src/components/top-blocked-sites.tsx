@@ -11,61 +11,48 @@ const favicon = (url: string) => (
   />
 );
 
-const blockedSites = [
-  {
-    icon: favicon("https://youtube.com"),
-    title: "youtube.com",
-    href: "https://youtube.com",
-    value: 128,
-  },
-  {
-    icon: favicon("https://instagram.com"),
-    title: "instagram.com",
-    href: "https://instagram.com",
-    value: 96,
-  },
-  {
-    icon: favicon("https://x.com"),
-    title: "x.com",
-    href: "https://x.com",
-    value: 74,
-  },
-  {
-    icon: favicon("https://reddit.com"),
-    title: "reddit.com",
-    href: "https://reddit.com",
-    value: 61,
-  },
-  {
-    icon: favicon("https://tiktok.com"),
-    title: "tiktok.com",
-    href: "https://tiktok.com",
-    value: 43,
-  },
-];
-
-export function TopBlockedSites({ className }: { className?: string }) {
+export function TopBlockedSites({
+  sites,
+  className,
+}: {
+  sites: { domain: string; attempts: number }[];
+  className?: string;
+}) {
+  const data = sites
+    .filter(({ attempts }) => attempts > 0)
+    .map(({ domain, attempts }) => ({
+      icon: favicon(`https://${domain}`),
+      title: domain,
+      href: `https://${domain}`,
+      value: attempts,
+    }));
   return (
     <section className={cn("h-full rounded-xl border bg-card p-5", className)}>
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <h3 className="font-display text-lg font-semibold text-foreground">Top blocked sites</h3>
           <p className="mt-1 text-sm text-pretty text-muted-foreground">
-            Sites with the most blocked attempts this week
+            Sites with the most blocked attempts in this period
           </p>
         </div>
       </div>
 
-      <BarList
-        tab="Websites"
-        unit="attempts"
-        data={blockedSites}
-        limit={5}
-        ditherColor="green"
-        ditherVariant="gradient"
-        hoverBackground="hover:bg-emerald-500/10"
-        minBarWidth={12}
-      />
+      {data.length > 0 ? (
+        <BarList
+          tab="Websites"
+          unit="attempts"
+          data={data}
+          limit={5}
+          ditherColor="green"
+          ditherVariant="gradient"
+          hoverBackground="hover:bg-emerald-500/10"
+          minBarWidth={12}
+        />
+      ) : (
+        <div className="flex h-52 items-center justify-center text-sm text-muted-foreground">
+          No data available yet
+        </div>
+      )}
     </section>
   );
 }

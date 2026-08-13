@@ -1,6 +1,8 @@
 import {
   defaultBlockingSettings,
   domainMatches,
+  getDomainCategoryIds,
+  getLocalDateKey,
   getCategoryDomains,
   getEffectiveBlockedDomains,
   sanitizeBlockingSettings,
@@ -8,6 +10,8 @@ import {
   type CategoryId,
 } from "@blockade/core";
 import { browser } from "wxt/browser";
+
+import { getAnalyticsState } from "./analytics-storage";
 
 const STORAGE_KEY = "blockingSettings";
 
@@ -120,8 +124,11 @@ export function subscribeToBlockingSettings(listener: (settings: BlockingSetting
 }
 
 export async function rebuildBlockingRule() {
-  const settings = await getBlockingSettings();
-  const requestDomains = getEffectiveBlockedDomains(settings);
+  const [settings, analytics] = await Promise.all([getBlockingSettings(), getAnalyticsState()]);
+  const usage = analytics.days[getLocalDateKey()]?.usageMsByItem ?? {};
+  const requestDomains = getEffectiveBlockedDomains(settings).filter((domain) =>
+    isDomainEnforced(domain, settings, usage),
+  );
   const excludedRequestDomains = settings.excludedDomains;
   const ruleId = 1;
   const managedRuleIds = (await browser.declarativeNetRequest.getDynamicRules()).map(
@@ -163,5 +170,54 @@ export async function rebuildBlockingRule() {
   await browser.declarativeNetRequest.updateDynamicRules({
     removeRuleIds: managedRuleIds,
     addRules: rules,
+  });
+}
+
+export async function getBlockedNavigation(url: string) {
+  const hostname = (() => {
+    try {
+      return new URL(url).hostname.toLowerCase();
+    } catch {
+      return null;
+    }
+  })();
+  if (!hostname) return null;
+
+  const [settings, analytics] = await Promise.all([getBlockingSettings(), getAnalyticsState()]);
+  if (settings.excludedDomains.some((domain) => domainMatches(hostname, domain))) return null;
+  const usage = analytics.days[getLocalDateKey()]?.usageMsByItem ?? {};
+  const domain = getEffectiveBlockedDomains(settings).find(
+    (candidate) =>
+      domainMatches(hostname, candidate) && isDomainEnforced(candidate, settings, usage),
+  );
+  const keyword = settings.blockedKeywords.find((item) => url.toLowerCase().includes(item));
+  if (!domain && !keyword) return null;
+
+  return {
+    hostname,
+    categoryIds: getDomainCategoryIds(hostname).filter((id) =>
+      settings.enabledCategoryIds.includes(id),
+    ),
+  };
+}
+
+function isDomainEnforced(
+  domain: string,
+  settings: BlockingSettings,
+  usageMsByItem: Record<string, number>,
+): boolean {
+  const applicableIds = [
+    ...(settings.customBlockedDomains.some((item) => domainMatches(domain, item))
+      ? [`website:${domain}`]
+      : []),
+    ...getDomainCategoryIds(domain)
+      .filter((id) => settings.enabledCategoryIds.includes(id))
+      .map((id) => `category:${id}`),
+  ];
+
+  return applicableIds.some((itemId) => {
+    const limit = settings.dailyLimits[itemId];
+    if (!limit || limit === "none") return true;
+    return (usageMsByItem[itemId] ?? 0) >= Number(limit) * 60 * 1000;
   });
 }

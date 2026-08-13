@@ -21,6 +21,7 @@
     "@shadcn/react": "^0.2.0",
     "@tailwindcss/vite": "^4.3.2",
     "@tanstack/react-form": "^1.33.0",
+    "@tanstack/react-hotkeys": "catalog:",
     "@tanstack/react-query": "^5.101.2",
     "@tanstack/react-router": "^1.170.17",
     "@tanstack/react-table": "^8.21.3",

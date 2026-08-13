@@ -10,6 +10,7 @@ import {
   blockCategories,
   domainMatches,
   getCategoryDomains,
+  getLocalDateKey,
   type CategoryId,
 } from "@blockade/core";
 import { StrictMode } from "react";
@@ -21,6 +22,7 @@ import { InsightsPage } from "../../../web/src/components/insights-page";
 import { SettingsPage } from "../../../web/src/components/settings-page";
 import { categoryImages } from "../../../web/src/data/category-images";
 import { useBlockingSettings } from "../../hooks/use-blocking-settings";
+import { useAnalyticsState } from "../../hooks/use-analytics-state";
 import {
   blockDomain,
   blockKeyword,
@@ -37,6 +39,8 @@ function DashboardLayout() {
 
 function ExtensionBlockListPage() {
   const { settings } = useBlockingSettings();
+  const analytics = useAnalyticsState();
+  const usage = analytics.days[getLocalDateKey()]?.usageMsByItem ?? {};
   const categoryDomains = getCategoryDomains(settings);
   const categoryRows = blockCategories
     .filter((category) => settings.enabledCategoryIds.includes(category.id))
@@ -45,7 +49,7 @@ function ExtensionBlockListPage() {
       name: category.label,
       url: "",
       dailyLimit: settings.dailyLimits[`category:${category.id}`] ?? "none",
-      usedMinutes: 0,
+      usedMinutes: (usage[`category:${category.id}`] ?? 0) / 60_000,
       type: "category" as const,
       imageUrl: categoryImages[category.id],
       dailyLimitApplicable: category.id !== "adult",
@@ -61,7 +65,7 @@ function ExtensionBlockListPage() {
       name: domain,
       url: `https://${domain}`,
       dailyLimit: settings.dailyLimits[`website:${domain}`] ?? "none",
-      usedMinutes: 0,
+      usedMinutes: (usage[`website:${domain}`] ?? 0) / 60_000,
       type: "website" as const,
     }));
   const keywordRows = settings.blockedKeywords.map((keyword) => ({
@@ -71,6 +75,7 @@ function ExtensionBlockListPage() {
     dailyLimit: settings.dailyLimits[`keyword:${keyword}`] ?? "none",
     usedMinutes: 0,
     type: "keyword" as const,
+    dailyLimitApplicable: false,
   }));
   const sites = [...categoryRows, ...websiteRows, ...keywordRows];
 
@@ -111,6 +116,37 @@ function ExtensionBlockListPage() {
   );
 }
 
+function ExtensionInsightsPage() {
+  const { settings } = useBlockingSettings();
+  const analytics = useAnalyticsState();
+  const finiteLimits = Object.entries(settings.dailyLimits).filter(
+    ([itemId, limit]) => !itemId.startsWith("keyword:") && limit !== "none",
+  );
+  const days = Array.from({ length: 90 }, (_, index) => {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() - (89 - index));
+    const dateKey = getLocalDateKey(date.getTime());
+    const day = analytics.days[dateKey];
+    return {
+      date: dateKey,
+      tracked: day !== undefined,
+      usageMinutes: Math.round(
+        Object.values(day?.usageMsByWebsite ?? {}).reduce((total, value) => total + value, 0) /
+          60_000,
+      ),
+      blockAttempts: day?.blockedAttempts ?? 0,
+      blockedAttemptsByWebsite: day?.blockedAttemptsByWebsite ?? {},
+      blockedAttemptsByCategory: day?.blockedAttemptsByCategory ?? {},
+      limitsApplicable: finiteLimits.length > 0,
+      limitsMet: finiteLimits.every(
+        ([itemId, limit]) => (day?.usageMsByItem[itemId] ?? 0) <= Number(limit) * 60_000,
+      ),
+    };
+  });
+  return <InsightsPage days={days} />;
+}
+
 const rootRoute = createRootRoute({ component: DashboardLayout });
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -127,7 +163,7 @@ const blockListRoute = createRoute({
 const insightsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/insights",
-  component: InsightsPage,
+  component: ExtensionInsightsPage,
 });
 const settingsRoute = createRoute({
   getParentRoute: () => rootRoute,
