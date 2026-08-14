@@ -5,13 +5,25 @@ import { RedirectSettings } from "@/components/settings/redirect-settings";
 export function SettingsPage({
   sessionDuration,
   breakDuration,
+  showPomodoroTimer,
+  customRedirectUrl,
+  showContextMenu,
   onSessionDurationChange,
   onBreakDurationChange,
+  onShowPomodoroTimerChange,
+  onCustomRedirectUrlChange,
+  onShowContextMenuChange,
 }: {
   sessionDuration?: number;
   breakDuration?: number;
+  showPomodoroTimer?: boolean;
+  customRedirectUrl?: string;
+  showContextMenu?: boolean;
   onSessionDurationChange?: (minutes: number) => void;
   onBreakDurationChange?: (minutes: number) => void;
+  onShowPomodoroTimerChange?: (show: boolean) => void;
+  onCustomRedirectUrlChange?: (url: string) => void;
+  onShowContextMenuChange?: (show: boolean) => void;
 } = {}) {
   return (
     <main className="mx-auto w-full max-w-7xl p-3 sm:p-4 md:p-5">
@@ -22,14 +34,22 @@ export function SettingsPage({
         </p>
       </header>
       <div className="bg-card divide-y px-5 py-2 rounded-lg border text-card-foreground">
-        <BlockSettings />
+        <BlockSettings
+          showContextMenu={showContextMenu}
+          onShowContextMenuChange={onShowContextMenuChange}
+        />
         <PomodoroSettings
           sessionDuration={sessionDuration}
           breakDuration={breakDuration}
           onSessionDurationChange={onSessionDurationChange}
           onBreakDurationChange={onBreakDurationChange}
         />
-        <RedirectSettings />
+        <RedirectSettings
+          showPomodoroTimer={showPomodoroTimer}
+          customRedirectUrl={customRedirectUrl}
+          onShowPomodoroTimerChange={onShowPomodoroTimerChange}
+          onCustomRedirectUrlChange={onCustomRedirectUrlChange}
+        />
       </div>
     </main>
   );

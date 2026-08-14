@@ -12,6 +12,7 @@ import {
 import { browser } from "wxt/browser";
 
 import { getAnalyticsState } from "./analytics-storage";
+import { getRedirectSettings } from "./redirect-settings-storage";
 
 const STORAGE_KEY = "blockingSettings";
 
@@ -124,12 +125,23 @@ export function subscribeToBlockingSettings(listener: (settings: BlockingSetting
 }
 
 export async function rebuildBlockingRule() {
-  const [settings, analytics] = await Promise.all([getBlockingSettings(), getAnalyticsState()]);
+  const [settings, analytics, redirectSettings] = await Promise.all([
+    getBlockingSettings(),
+    getAnalyticsState(),
+    getRedirectSettings(),
+  ]);
   const usage = analytics.days[getLocalDateKey()]?.usageMsByItem ?? {};
   const requestDomains = getEffectiveBlockedDomains(settings).filter((domain) =>
     isDomainEnforced(domain, settings, usage),
   );
-  const excludedRequestDomains = settings.excludedDomains;
+  const customRedirectHostname = getHostname(redirectSettings.customRedirectUrl);
+  const excludedRequestDomains = [
+    ...settings.excludedDomains,
+    ...(customRedirectHostname ? [customRedirectHostname] : []),
+  ];
+  const redirect = redirectSettings.customRedirectUrl
+    ? { url: redirectSettings.customRedirectUrl }
+    : { extensionPath: "/redirect.html" };
   const ruleId = 1;
   const managedRuleIds = (await browser.declarativeNetRequest.getDynamicRules()).map(
     (rule) => rule.id,
@@ -143,7 +155,7 @@ export async function rebuildBlockingRule() {
             priority: 1,
             action: {
               type: "redirect" as const,
-              redirect: { extensionPath: "/redirect.html" },
+              redirect,
             },
             condition: {
               requestDomains,
@@ -157,11 +169,12 @@ export async function rebuildBlockingRule() {
       priority: 1,
       action: {
         type: "redirect" as const,
-        redirect: { extensionPath: "/redirect.html" },
+        redirect,
       },
       condition: {
         urlFilter: keyword,
         isUrlFilterCaseSensitive: false,
+        excludedRequestDomains,
         resourceTypes: ["main_frame" as const],
       },
     })),
@@ -171,6 +184,14 @@ export async function rebuildBlockingRule() {
     removeRuleIds: managedRuleIds,
     addRules: rules,
   });
+}
+
+function getHostname(value: string) {
+  try {
+    return value ? new URL(value).hostname : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function getBlockedNavigation(url: string) {

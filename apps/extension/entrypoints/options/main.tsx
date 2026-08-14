@@ -23,7 +23,9 @@ import { SettingsPage } from "../../../web/src/components/settings-page";
 import { categoryImages } from "../../../web/src/data/category-images";
 import { useBlockingSettings } from "../../hooks/use-blocking-settings";
 import { useAnalyticsState } from "../../hooks/use-analytics-state";
+import { useBlockSettings } from "../../hooks/use-block-settings";
 import { usePomodoroSettings } from "../../hooks/use-pomodoro-settings";
+import { useRedirectSettings } from "../../hooks/use-redirect-settings";
 import {
   blockDomain,
   blockKeyword,
@@ -33,6 +35,8 @@ import {
   unblockKeyword,
 } from "../../lib/blocking-storage";
 import { updatePomodoroSettings } from "../../lib/pomodoro-settings-storage";
+import { updateRedirectSettings } from "../../lib/redirect-settings-storage";
+import { updateBlockSettings } from "../../lib/block-settings-storage";
 import "./style.css";
 
 function DashboardLayout() {
@@ -150,15 +154,27 @@ function ExtensionInsightsPage() {
 }
 
 function ExtensionSettingsPage() {
-  const settings = usePomodoroSettings();
+  const blockSettings = useBlockSettings();
+  const pomodoroSettings = usePomodoroSettings();
+  const redirectSettings = useRedirectSettings();
   return (
     <SettingsPage
-      sessionDuration={settings.sessionDuration}
-      breakDuration={settings.breakDuration}
+      sessionDuration={pomodoroSettings.sessionDuration}
+      breakDuration={pomodoroSettings.breakDuration}
+      showPomodoroTimer={redirectSettings.showPomodoroTimer}
+      customRedirectUrl={redirectSettings.customRedirectUrl}
+      showContextMenu={blockSettings.showContextMenu}
       onSessionDurationChange={(sessionDuration) =>
         void updatePomodoroSettings({ sessionDuration })
       }
       onBreakDurationChange={(breakDuration) => void updatePomodoroSettings({ breakDuration })}
+      onShowPomodoroTimerChange={(showPomodoroTimer) =>
+        void updateRedirectSettings({ showPomodoroTimer })
+      }
+      onCustomRedirectUrlChange={(customRedirectUrl) =>
+        void updateRedirectSettings({ customRedirectUrl })
+      }
+      onShowContextMenuChange={(showContextMenu) => void updateBlockSettings({ showContextMenu })}
     />
   );
 }
