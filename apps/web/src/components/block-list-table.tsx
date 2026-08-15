@@ -1,4 +1,4 @@
-import { alwaysBlockedCategoryIds } from "@blockade/core";
+import { alwaysBlockedCategoryIds, defaultAdultKeywords } from "@blockade/core";
 
 import { TrashBinLinear } from "@/assets/icons/trash-icon";
 import { DailyLimitSelect } from "@/components/block-list/daily-limit-select";
@@ -21,6 +21,10 @@ export type BlockedSite = {
   imageUrl?: string;
   dailyLimitApplicable?: boolean;
 };
+
+const hiddenDefaultKeywords = new Set<string>(
+  defaultAdultKeywords.map((keyword) => keyword.toLowerCase()),
+);
 
 function DeleteAction({
   site,
@@ -154,7 +158,12 @@ export function BlockListTable({
   onDailyLimitChange?: (siteId: string, dailyLimit: string) => void;
   typeFilter?: BlockedSite["type"];
 } = {}) {
-  const filteredSites = typeFilter ? sites.filter((site) => site.type === typeFilter) : sites;
+  const visibleSites = sites.filter(
+    (site) => site.type !== "keyword" || !hiddenDefaultKeywords.has(site.name),
+  );
+  const filteredSites = typeFilter
+    ? visibleSites.filter((site) => site.type === typeFilter)
+    : visibleSites;
   const columns = getColumns({
     onLimitChange: (siteId, dailyLimit) => onDailyLimitChange?.(siteId, dailyLimit),
     onDelete: (siteId) => onDeleteSite?.(siteId),

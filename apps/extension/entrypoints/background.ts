@@ -102,38 +102,92 @@ export default defineBackground(() => {
   });
 
   let lastAttempt = { key: "", timestamp: 0 };
-  const handleBlockedNavigation = async (
-    details: { frameId: number; tabId: number; url: string },
-    redirectTab: boolean,
-  ) => {
-    if (details.frameId !== 0) return;
-    const blocked = await getBlockedNavigation(details.url);
-    if (!blocked) return;
+  const getBlockedRedirectUrl = async (tabId: number, url: string) => {
+    const blocked = await getBlockedNavigation(url);
+    if (!blocked) return null;
 
     const now = Date.now();
-    const key = `${details.tabId}:${details.url}`;
+    const key = `${tabId}:${url}`;
     if (lastAttempt.key !== key || now - lastAttempt.timestamp >= 2_000) {
       lastAttempt = { key, timestamp: now };
       await recordBlockedAttempt(blocked);
     }
 
-    if (!redirectTab) return;
     const redirectSettings = await getRedirectSettings();
-    const redirectUrl =
-      redirectSettings.customRedirectUrl || browser.runtime.getURL("/redirect.html");
-    if (details.url !== redirectUrl) {
-      await browser.tabs.update(details.tabId, { url: redirectUrl });
+    return {
+      baseUrl: blocked.blockedByKeywordOnly ? new URL(url).origin : null,
+      redirectUrl: redirectSettings.customRedirectUrl || browser.runtime.getURL("/redirect.html"),
+    };
+  };
+
+  const replaceTabNavigation = async (
+    tabId: number,
+    sourceUrl: string,
+    redirectUrl: string,
+    baseUrl: string | null,
+  ) => {
+    try {
+      const response = (await browser.tabs.sendMessage(tabId, {
+        type: "blockade:replace-navigation",
+        baseUrl,
+        sourceUrl,
+        redirectUrl,
+      })) as { replacing?: boolean } | undefined;
+      if (response?.replacing) return;
+    } catch {
+      // Existing tabs do not receive a newly installed content script until they reload.
+    }
+    await browser.tabs.update(tabId, { url: redirectUrl });
+  };
+
+  const handleBlockedNavigation = async (
+    details: { frameId: number; tabId: number; url: string },
+    redirectTab: boolean,
+  ) => {
+    if (details.frameId !== 0) return;
+    const redirect = await getBlockedRedirectUrl(details.tabId, details.url);
+    if (redirectTab && redirect && details.url !== redirect.redirectUrl) {
+      await replaceTabNavigation(
+        details.tabId,
+        details.url,
+        redirect.redirectUrl,
+        redirect.baseUrl,
+      );
     }
   };
 
+  browser.runtime.onMessage.addListener((message: unknown, sender) => {
+    const value = message as { type?: string; url?: unknown };
+    if (
+      value.type !== "blockade:check-navigation" ||
+      typeof value.url !== "string" ||
+      sender.tab?.id === undefined
+    ) {
+      return;
+    }
+    return getBlockedRedirectUrl(sender.tab.id, value.url).then(
+      (redirect) =>
+        redirect ?? {
+          baseUrl: null,
+          redirectUrl: null,
+        },
+    );
+  });
+
   browser.webNavigation.onBeforeNavigate.addListener((details) => {
-    void handleBlockedNavigation(details, false);
+    void handleBlockedNavigation(details, false).catch((error: unknown) => {
+      console.error("Failed to check a navigation", error);
+    });
   });
   browser.webNavigation.onHistoryStateUpdated.addListener((details) => {
-    void handleBlockedNavigation(details, true);
+    void handleBlockedNavigation(details, true).catch((error: unknown) => {
+      console.error("Failed to block a history-state navigation", error);
+    });
   });
   browser.webNavigation.onReferenceFragmentUpdated.addListener((details) => {
-    void handleBlockedNavigation(details, true);
+    void handleBlockedNavigation(details, true).catch((error: unknown) => {
+      console.error("Failed to block a fragment navigation", error);
+    });
   });
   browser.contextMenus.onClicked.addListener((info, tab) => {
     if (info.menuItemId !== BLOCK_SITE_MENU_ID) return;

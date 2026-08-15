@@ -1,6 +1,7 @@
 import { getDomain } from "tldts";
 
 import { blockCategories, categoryIds, type CategoryId } from "./categories";
+import { defaultAdultKeywords } from "./default-adult-keywords";
 
 export type BlockingSettings = {
   version: number;
@@ -11,14 +12,14 @@ export type BlockingSettings = {
   dailyLimits: Record<string, string>;
 };
 
-export const blockingSettingsVersion = 3;
+export const blockingSettingsVersion = 5;
 
 export const defaultBlockingSettings: BlockingSettings = {
   version: blockingSettingsVersion,
   enabledCategoryIds: ["adult", "gambling"],
   excludedDomains: [],
   customBlockedDomains: [],
-  blockedKeywords: [],
+  blockedKeywords: [...defaultAdultKeywords],
   dailyLimits: {},
 };
 
@@ -64,18 +65,25 @@ export function sanitizeBlockingSettings(value: Partial<BlockingSettings>): Bloc
     if (value.version === 2) {
       return [...(value.enabledCategoryIds ?? []), "gambling" as const];
     }
+    if (value.version === 3 || value.version === 4) {
+      return value.enabledCategoryIds ?? defaultBlockingSettings.enabledCategoryIds;
+    }
     return defaultBlockingSettings.enabledCategoryIds;
   })();
   const enabledCategoryIds = Array.from(
     new Set(configuredCategoryIds.filter((id): id is CategoryId => validCategoryIds.has(id))),
   );
+  const configuredKeywords =
+    value.version === blockingSettingsVersion
+      ? (value.blockedKeywords ?? defaultBlockingSettings.blockedKeywords)
+      : [...(value.blockedKeywords ?? []), ...defaultAdultKeywords];
 
   return {
     version: blockingSettingsVersion,
     enabledCategoryIds,
     excludedDomains: normalizeDomainList(value.excludedDomains ?? []),
     customBlockedDomains: normalizeDomainList(value.customBlockedDomains ?? []),
-    blockedKeywords: normalizeKeywordList(value.blockedKeywords ?? []),
+    blockedKeywords: normalizeKeywordList(configuredKeywords),
     dailyLimits: normalizeDailyLimits(value.dailyLimits),
   };
 }
@@ -143,12 +151,62 @@ export function normalizeKeyword(value: string): string | null {
   return keyword.length >= 2 && keyword.length <= 100 ? keyword : null;
 }
 
+export function urlMatchesKeyword(urlValue: string, keywordValue: string): boolean {
+  const keyword = normalizeMatchText(keywordValue);
+  if (!keyword) return false;
+
+  const searchableText = (() => {
+    try {
+      const url = new URL(urlValue);
+      return [
+        url.hostname,
+        decodeUrlPart(url.pathname),
+        ...Array.from(url.searchParams.values()),
+        decodeUrlPart(url.hash),
+      ].join(" ");
+    } catch {
+      return decodeUrlPart(urlValue);
+    }
+  })();
+
+  return ` ${normalizeMatchText(searchableText)} `.includes(` ${keyword} `);
+}
+
+export function createKeywordUrlRegex(keywordValue: string): string | null {
+  const words = normalizeMatchText(keywordValue).match(/[a-z0-9]+/g);
+  if (!words?.length) return null;
+
+  const separator = "(?:%[0-9a-f]{2}|[^a-z0-9])";
+  const keywordPattern = words.map(escapeRegex).join(`${separator}+`);
+  return `(?:^|${separator})${keywordPattern}(?:$|${separator})`;
+}
+
 function normalizeKeywordList(keywords: readonly string[]): string[] {
   return Array.from(
     new Set(
       keywords.map(normalizeKeyword).filter((keyword): keyword is string => keyword !== null),
     ),
   ).sort();
+}
+
+function normalizeMatchText(value: string) {
+  return value
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
+}
+
+function decodeUrlPart(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+function escapeRegex(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function normalizeDailyLimits(value: Record<string, string> | undefined): Record<string, string> {

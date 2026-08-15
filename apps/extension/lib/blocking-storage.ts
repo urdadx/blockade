@@ -1,15 +1,19 @@
 import {
   defaultBlockingSettings,
+  createKeywordUrlRegex,
+  defaultAdultKeywordDomains,
   domainMatches,
   getDomainCategoryIds,
   getLocalDateKey,
   isBlockingScheduleActive,
   isAlwaysBlockedCategory,
+  isDefaultAdultKeyword,
   getCategoryDomains,
   getEffectiveBlockedDomains,
   sanitizeBlockingSettings,
   type BlockingSettings,
   type CategoryId,
+  urlMatchesKeyword,
 } from "@blockade/core";
 import { browser } from "wxt/browser";
 
@@ -150,6 +154,10 @@ export async function rebuildBlockingRule() {
     ? { url: redirectSettings.customRedirectUrl }
     : { extensionPath: "/redirect.html" };
   const ruleId = 1;
+  const keywordRegexes = (scheduleActive ? settings.blockedKeywords : []).flatMap((keyword) => {
+    const regexFilter = createKeywordUrlRegex(keyword);
+    return regexFilter ? [{ keyword, regexFilter }] : [];
+  });
   const managedRuleIds = (await browser.declarativeNetRequest.getDynamicRules()).map(
     (rule) => rule.id,
   );
@@ -171,7 +179,7 @@ export async function rebuildBlockingRule() {
             },
           },
         ]),
-    ...(scheduleActive ? settings.blockedKeywords : []).map((keyword, index) => ({
+    ...keywordRegexes.map(({ keyword, regexFilter }, index) => ({
       id: index + 2,
       priority: 1,
       action: {
@@ -179,9 +187,12 @@ export async function rebuildBlockingRule() {
         redirect,
       },
       condition: {
-        urlFilter: keyword,
+        regexFilter,
         isUrlFilterCaseSensitive: false,
         excludedRequestDomains,
+        ...(isDefaultAdultKeyword(keyword)
+          ? { requestDomains: [...defaultAdultKeywordDomains] }
+          : {}),
         resourceTypes: ["main_frame" as const],
       },
     })),
@@ -223,11 +234,18 @@ export async function getBlockedNavigation(url: string) {
     (candidate) =>
       domainMatches(hostname, candidate) && isDomainEnforced(candidate, settings, usage),
   );
-  const keyword = settings.blockedKeywords.find((item) => url.toLowerCase().includes(item));
+  const isDefaultKeywordDomain = defaultAdultKeywordDomains.some((candidate) =>
+    domainMatches(hostname, candidate),
+  );
+  const keyword = settings.blockedKeywords.find(
+    (item) =>
+      (!isDefaultAdultKeyword(item) || isDefaultKeywordDomain) && urlMatchesKeyword(url, item),
+  );
   if (!domain && !keyword) return null;
 
   return {
     hostname,
+    blockedByKeywordOnly: Boolean(keyword && !domain),
     categoryIds: getDomainCategoryIds(hostname).filter((id) =>
       settings.enabledCategoryIds.includes(id),
     ),
