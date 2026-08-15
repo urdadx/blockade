@@ -2,6 +2,7 @@ import { getNextScheduleBoundary, getRegistrableDomain } from "@blockade/core";
 
 import { recordBlockedAttempt } from "../lib/analytics-storage";
 import { getBlockSettings } from "../lib/block-settings-storage";
+import { getRedirectSettings } from "../lib/redirect-settings-storage";
 import { getScheduleSettings } from "../lib/schedule-settings-storage";
 import {
   blockDomain,
@@ -101,16 +102,38 @@ export default defineBackground(() => {
   });
 
   let lastAttempt = { key: "", timestamp: 0 };
-  browser.webNavigation.onBeforeNavigate.addListener((details) => {
+  const handleBlockedNavigation = async (
+    details: { frameId: number; tabId: number; url: string },
+    redirectTab: boolean,
+  ) => {
     if (details.frameId !== 0) return;
-    void getBlockedNavigation(details.url).then((blocked) => {
-      if (!blocked) return;
-      const now = Date.now();
-      const key = `${details.tabId}:${details.url}`;
-      if (lastAttempt.key === key && now - lastAttempt.timestamp < 2_000) return;
+    const blocked = await getBlockedNavigation(details.url);
+    if (!blocked) return;
+
+    const now = Date.now();
+    const key = `${details.tabId}:${details.url}`;
+    if (lastAttempt.key !== key || now - lastAttempt.timestamp >= 2_000) {
       lastAttempt = { key, timestamp: now };
-      void recordBlockedAttempt(blocked);
-    });
+      await recordBlockedAttempt(blocked);
+    }
+
+    if (!redirectTab) return;
+    const redirectSettings = await getRedirectSettings();
+    const redirectUrl =
+      redirectSettings.customRedirectUrl || browser.runtime.getURL("/redirect.html");
+    if (details.url !== redirectUrl) {
+      await browser.tabs.update(details.tabId, { url: redirectUrl });
+    }
+  };
+
+  browser.webNavigation.onBeforeNavigate.addListener((details) => {
+    void handleBlockedNavigation(details, false);
+  });
+  browser.webNavigation.onHistoryStateUpdated.addListener((details) => {
+    void handleBlockedNavigation(details, true);
+  });
+  browser.webNavigation.onReferenceFragmentUpdated.addListener((details) => {
+    void handleBlockedNavigation(details, true);
   });
   browser.contextMenus.onClicked.addListener((info, tab) => {
     if (info.menuItemId !== BLOCK_SITE_MENU_ID) return;
