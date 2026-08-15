@@ -11,6 +11,7 @@ import {
   domainMatches,
   getCategoryDomains,
   getLocalDateKey,
+  getScheduledMinutesForDate,
   type CategoryId,
 } from "@blockade/core";
 import { StrictMode } from "react";
@@ -26,6 +27,7 @@ import { useAnalyticsState } from "../../hooks/use-analytics-state";
 import { useBlockSettings } from "../../hooks/use-block-settings";
 import { usePomodoroSettings } from "../../hooks/use-pomodoro-settings";
 import { useRedirectSettings } from "../../hooks/use-redirect-settings";
+import { useScheduleSettings } from "../../hooks/use-schedule-settings";
 import {
   blockDomain,
   blockKeyword,
@@ -36,7 +38,13 @@ import {
 } from "../../lib/blocking-storage";
 import { updatePomodoroSettings } from "../../lib/pomodoro-settings-storage";
 import { updateRedirectSettings } from "../../lib/redirect-settings-storage";
-import { updateBlockSettings } from "../../lib/block-settings-storage";
+import { updateScheduleSettings } from "../../lib/schedule-settings-storage";
+import {
+  disableBlockSettingsPassword,
+  setBlockSettingsPassword,
+  updateBlockSettings,
+  verifyBlockSettingsPassword,
+} from "../../lib/block-settings-storage";
 import "./style.css";
 
 function DashboardLayout() {
@@ -45,6 +53,8 @@ function DashboardLayout() {
 
 function ExtensionBlockListPage() {
   const { settings } = useBlockingSettings();
+  const blockSettings = useBlockSettings();
+  const schedule = useScheduleSettings();
   const analytics = useAnalyticsState();
   const usage = analytics.days[getLocalDateKey()]?.usageMsByItem ?? {};
   const categoryDomains = getCategoryDomains(settings);
@@ -118,6 +128,12 @@ function ExtensionBlockListPage() {
       onDeleteSite={removeSite}
       onDailyLimitChange={updateDailyLimit}
       onAddItems={addItems}
+      passwordProtectionEnabled={blockSettings.passwordProtectionEnabled}
+      onVerifyPassword={verifyBlockSettingsPassword}
+      schedule={schedule}
+      onScheduleChange={async (nextSchedule) => {
+        await updateScheduleSettings(nextSchedule);
+      }}
     />
   );
 }
@@ -125,6 +141,7 @@ function ExtensionBlockListPage() {
 function ExtensionInsightsPage() {
   const { settings } = useBlockingSettings();
   const analytics = useAnalyticsState();
+  const schedule = useScheduleSettings();
   const finiteLimits = Object.entries(settings.dailyLimits).filter(
     ([itemId, limit]) => !itemId.startsWith("keyword:") && limit !== "none",
   );
@@ -137,10 +154,12 @@ function ExtensionInsightsPage() {
     return {
       date: dateKey,
       tracked: day !== undefined,
+      scheduled: !schedule.enabled || getScheduledMinutesForDate(schedule, date.getTime()) > 0,
       usageMinutes: Math.round(
         Object.values(day?.usageMsByWebsite ?? {}).reduce((total, value) => total + value, 0) /
           60_000,
       ),
+      focusMinutes: Math.round((day?.scheduledFocusMs ?? 0) / 60_000),
       blockAttempts: day?.blockedAttempts ?? 0,
       blockedAttemptsByWebsite: day?.blockedAttemptsByWebsite ?? {},
       blockedAttemptsByCategory: day?.blockedAttemptsByCategory ?? {},
@@ -164,6 +183,7 @@ function ExtensionSettingsPage() {
       showPomodoroTimer={redirectSettings.showPomodoroTimer}
       customRedirectUrl={redirectSettings.customRedirectUrl}
       showContextMenu={blockSettings.showContextMenu}
+      passwordProtectionEnabled={blockSettings.passwordProtectionEnabled}
       onSessionDurationChange={(sessionDuration) =>
         void updatePomodoroSettings({ sessionDuration })
       }
@@ -175,6 +195,10 @@ function ExtensionSettingsPage() {
         void updateRedirectSettings({ customRedirectUrl })
       }
       onShowContextMenuChange={(showContextMenu) => void updateBlockSettings({ showContextMenu })}
+      onSetBlockSettingsPassword={async (password) => {
+        await setBlockSettingsPassword(password);
+      }}
+      onDisableBlockSettingsPassword={disableBlockSettingsPassword}
     />
   );
 }

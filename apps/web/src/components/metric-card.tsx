@@ -13,7 +13,7 @@ type Metric = {
 };
 
 type MetricCardProps = {
-  distractionTime: Metric;
+  focusTime: Metric;
   blocksTriggered: Metric;
   currentStreak: Metric;
   focusScore: Metric;
@@ -60,7 +60,7 @@ function TrendIndicator({ trend }: { trend?: ReactNode }) {
 }
 
 export function MetricCard({
-  distractionTime,
+  focusTime,
   blocksTriggered,
   currentStreak,
   focusScore,
@@ -69,10 +69,10 @@ export function MetricCard({
 }: MetricCardProps) {
   const metrics: MetricItem[] = [
     {
-      label: "Avg distraction time",
+      label: "Avg. focus time",
       icon: TimerOutline,
       iconClassName: "text-blue-500",
-      ...distractionTime,
+      ...focusTime,
     },
     {
       label: "Blocks triggered",

@@ -1,10 +1,12 @@
 export type UsageSession = {
   hostname: string;
   itemIds: string[];
+  tracksFocus: boolean;
   checkpointAt: number;
 };
 
 export type DailyAnalytics = {
+  scheduledFocusMs: number;
   usageMsByItem: Record<string, number>;
   usageMsByWebsite: Record<string, number>;
   blockedAttempts: number;
@@ -21,6 +23,7 @@ export type AnalyticsState = {
 export const analyticsVersion = 1;
 
 export const emptyDailyAnalytics = (): DailyAnalytics => ({
+  scheduledFocusMs: 0,
   usageMsByItem: {},
   usageMsByWebsite: {},
   blockedAttempts: 0,
@@ -61,6 +64,7 @@ export function sanitizeAnalyticsState(value: Partial<AnalyticsState>): Analytic
         ? {
             hostname: session.hostname,
             itemIds: session.itemIds.filter((item): item is string => typeof item === "string"),
+            tracksFocus: session.tracksFocus === true,
             checkpointAt: session.checkpointAt,
           }
         : null,
@@ -69,6 +73,7 @@ export function sanitizeAnalyticsState(value: Partial<AnalyticsState>): Analytic
 
 function sanitizeDay(value: Partial<DailyAnalytics> | undefined): DailyAnalytics {
   return {
+    scheduledFocusMs: sanitizeCount(value?.scheduledFocusMs),
     usageMsByItem: sanitizeCountMap(value?.usageMsByItem),
     usageMsByWebsite: sanitizeCountMap(value?.usageMsByWebsite),
     blockedAttempts: sanitizeCount(value?.blockedAttempts),

@@ -3,6 +3,7 @@ import {
   domainMatches,
   getDomainCategoryIds,
   getLocalDateKey,
+  isBlockingScheduleActive,
   getCategoryDomains,
   getEffectiveBlockedDomains,
   sanitizeBlockingSettings,
@@ -13,6 +14,7 @@ import { browser } from "wxt/browser";
 
 import { getAnalyticsState } from "./analytics-storage";
 import { getRedirectSettings } from "./redirect-settings-storage";
+import { getScheduleSettings } from "./schedule-settings-storage";
 
 const STORAGE_KEY = "blockingSettings";
 
@@ -125,15 +127,19 @@ export function subscribeToBlockingSettings(listener: (settings: BlockingSetting
 }
 
 export async function rebuildBlockingRule() {
-  const [settings, analytics, redirectSettings] = await Promise.all([
+  const [settings, analytics, redirectSettings, schedule] = await Promise.all([
     getBlockingSettings(),
     getAnalyticsState(),
     getRedirectSettings(),
+    getScheduleSettings(),
   ]);
+  const scheduleActive = isBlockingScheduleActive(schedule);
   const usage = analytics.days[getLocalDateKey()]?.usageMsByItem ?? {};
-  const requestDomains = getEffectiveBlockedDomains(settings).filter((domain) =>
-    isDomainEnforced(domain, settings, usage),
-  );
+  const requestDomains = scheduleActive
+    ? getEffectiveBlockedDomains(settings).filter((domain) =>
+        isDomainEnforced(domain, settings, usage),
+      )
+    : [];
   const customRedirectHostname = getHostname(redirectSettings.customRedirectUrl);
   const excludedRequestDomains = [
     ...settings.excludedDomains,
@@ -164,7 +170,7 @@ export async function rebuildBlockingRule() {
             },
           },
         ]),
-    ...settings.blockedKeywords.map((keyword, index) => ({
+    ...(scheduleActive ? settings.blockedKeywords : []).map((keyword, index) => ({
       id: index + 2,
       priority: 1,
       action: {
@@ -204,7 +210,12 @@ export async function getBlockedNavigation(url: string) {
   })();
   if (!hostname) return null;
 
-  const [settings, analytics] = await Promise.all([getBlockingSettings(), getAnalyticsState()]);
+  const [settings, analytics, schedule] = await Promise.all([
+    getBlockingSettings(),
+    getAnalyticsState(),
+    getScheduleSettings(),
+  ]);
+  if (!isBlockingScheduleActive(schedule)) return null;
   if (settings.excludedDomains.some((domain) => domainMatches(hostname, domain))) return null;
   const usage = analytics.days[getLocalDateKey()]?.usageMsByItem ?? {};
   const domain = getEffectiveBlockedDomains(settings).find(

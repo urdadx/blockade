@@ -9,7 +9,7 @@ import { YAxis } from "@/components/dither-kit/y-axis";
 export type FocusTimeDatum = {
   date: string;
   dateLabel: string;
-  usageMinutes: number;
+  focusMinutes: number;
 };
 
 type FocusTimeChartProps = {
@@ -19,14 +19,14 @@ type FocusTimeChartProps = {
 };
 
 const config = {
-  usageMinutes: {
-    label: "Distraction usage",
+  focusMinutes: {
+    label: "Focus time",
     color: "orange",
   },
 } satisfies ChartConfig;
 
 export function FocusTimeChart({ data, dateRange, periodLabel }: FocusTimeChartProps) {
-  const totalMinutes = data.reduce((total, item) => total + item.usageMinutes, 0);
+  const totalMinutes = data.reduce((total, item) => total + item.focusMinutes, 0);
 
   return (
     <section className="flex h-96 min-w-0 flex-col rounded-xl border bg-card px-1 py-5">
@@ -34,7 +34,7 @@ export function FocusTimeChart({ data, dateRange, periodLabel }: FocusTimeChartP
         <div className="flex min-w-0 flex-col gap-1 text-left">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span className="size-2 shrink-0 rounded bg-orange-500" />
-            <span>Daily distraction usage</span>
+            <span>Focus time</span>
           </div>
           <p className="font-display text-2xl font-semibold text-foreground tabular-nums">
             {Math.floor(totalMinutes / 60)}h {totalMinutes % 60}m
@@ -62,7 +62,7 @@ export function FocusTimeChart({ data, dateRange, periodLabel }: FocusTimeChartP
             variant="frosted-glass"
             valueFormatter={(value) => `${value} min`}
           />
-          <Area dataKey="usageMinutes" variant="gradient" />
+          <Area dataKey="focusMinutes" variant="gradient" />
         </AreaChart>
       </div>
     </section>

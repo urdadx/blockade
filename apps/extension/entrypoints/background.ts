@@ -1,7 +1,8 @@
-import { getRegistrableDomain } from "@blockade/core";
+import { getNextScheduleBoundary, getRegistrableDomain } from "@blockade/core";
 
 import { recordBlockedAttempt } from "../lib/analytics-storage";
 import { getBlockSettings } from "../lib/block-settings-storage";
+import { getScheduleSettings } from "../lib/schedule-settings-storage";
 import {
   blockDomain,
   getBlockedNavigation,
@@ -17,6 +18,7 @@ import {
 } from "../lib/usage-tracker";
 
 const BLOCK_SITE_MENU_ID = "blockade-block-site";
+const BLOCKING_SCHEDULE_ALARM = "blocking-schedule-boundary";
 
 export default defineBackground(() => {
   browser.idle.setDetectionInterval(USAGE_IDLE_THRESHOLD_SECONDS);
@@ -39,16 +41,27 @@ export default defineBackground(() => {
       });
   };
 
+  let scheduleQueue = Promise.resolve();
+  const queueScheduleSync = () => {
+    scheduleQueue = scheduleQueue
+      .then(syncScheduleAlarm, syncScheduleAlarm)
+      .catch((error: unknown) => {
+        console.error("Failed to update the Blockade schedule alarm", error);
+      });
+  };
+
   browser.runtime.onInstalled.addListener(() => {
     void initializeBlockingSettings().then(() => {
       queueRebuild();
       queueContextMenuSync();
+      queueScheduleSync();
       void ensureUsageCheckpointAlarm();
       void refreshUsageSession();
     });
   });
   browser.runtime.onStartup.addListener(() => {
     queueContextMenuSync();
+    queueScheduleSync();
     void ensureUsageCheckpointAlarm();
     void refreshUsageSession();
   });
@@ -58,7 +71,11 @@ export default defineBackground(() => {
     if (changes.blockingSettings || changes.analyticsState || changes.redirectSettings)
       queueRebuild();
     if (changes.blockSettings) queueContextMenuSync();
-    if (changes.blockingSettings) void refreshUsageSession();
+    if (changes.scheduleSettings) {
+      queueRebuild();
+      queueScheduleSync();
+    }
+    if (changes.blockingSettings || changes.scheduleSettings) void refreshUsageSession();
   });
 
   browser.tabs.onActivated.addListener(() => void refreshUsageSession());
@@ -76,6 +93,11 @@ export default defineBackground(() => {
   });
   browser.alarms.onAlarm.addListener((alarm) => {
     if (alarm.name === USAGE_CHECKPOINT_ALARM) void refreshUsageSession();
+    if (alarm.name === BLOCKING_SCHEDULE_ALARM) {
+      queueRebuild();
+      queueScheduleSync();
+      void refreshUsageSession();
+    }
   });
 
   let lastAttempt = { key: "", timestamp: 0 };
@@ -104,6 +126,7 @@ export default defineBackground(() => {
   void ensureUsageCheckpointAlarm();
   queueRebuild();
   queueContextMenuSync();
+  queueScheduleSync();
   void refreshUsageSession();
 });
 
@@ -118,4 +141,10 @@ async function syncContextMenu() {
     contexts: ["all"],
     documentUrlPatterns: ["http://*/*", "https://*/*"],
   });
+}
+
+async function syncScheduleAlarm() {
+  await browser.alarms.clear(BLOCKING_SCHEDULE_ALARM);
+  const boundary = getNextScheduleBoundary(await getScheduleSettings());
+  if (boundary) await browser.alarms.create(BLOCKING_SCHEDULE_ALARM, { when: boundary });
 }

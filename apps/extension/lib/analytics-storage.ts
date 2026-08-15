@@ -44,8 +44,11 @@ export async function checkpointUsage(nextSession: UsageSession | null, timestam
       const elapsedMs = Math.min(MAX_SESSION_MS, Math.max(0, timestamp - session.checkpointAt));
       const date = getLocalDateKey(session.checkpointAt);
       const day = (next.days[date] ??= emptyDailyAnalytics());
-      day.usageMsByWebsite[session.hostname] =
-        (day.usageMsByWebsite[session.hostname] ?? 0) + elapsedMs;
+      if (session.tracksFocus) day.scheduledFocusMs += elapsedMs;
+      if (session.itemIds.length > 0) {
+        day.usageMsByWebsite[session.hostname] =
+          (day.usageMsByWebsite[session.hostname] ?? 0) + elapsedMs;
+      }
       for (const itemId of session.itemIds) {
         day.usageMsByItem[itemId] = (day.usageMsByItem[itemId] ?? 0) + elapsedMs;
       }

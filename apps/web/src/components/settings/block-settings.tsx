@@ -16,15 +16,60 @@ import { Label } from "../label";
 
 export function BlockSettings({
   showContextMenu = true,
+  passwordProtectionEnabled = false,
   onShowContextMenuChange,
+  onSetPassword,
+  onDisablePassword,
 }: {
   showContextMenu?: boolean;
+  passwordProtectionEnabled?: boolean;
   onShowContextMenuChange?: (show: boolean) => void;
+  onSetPassword?: (password: string) => void | Promise<void>;
+  onDisablePassword?: (password: string) => boolean | Promise<boolean>;
 }) {
-  const [isPasswordEnabled, setIsPasswordEnabled] = useState(false);
+  const [passwordDialogMode, setPasswordDialogMode] = useState<"setup" | "disable">("setup");
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
 
   const handlePasswordToggle = (checked: boolean) => {
-    setIsPasswordEnabled(checked);
+    if (checked === passwordProtectionEnabled) return;
+    setPasswordDialogMode(checked ? "setup" : "disable");
+    setPassword("");
+    setConfirmPassword("");
+    setPasswordError("");
+    setIsPasswordDialogOpen(true);
+  };
+
+  const savePassword = async () => {
+    setPasswordError("");
+    if (password.length < 8) {
+      setPasswordError("Password must be at least 8 characters.");
+      return;
+    }
+    if (passwordDialogMode === "setup" && password !== confirmPassword) {
+      setPasswordError("Passwords do not match.");
+      return;
+    }
+
+    setIsSavingPassword(true);
+    try {
+      if (passwordDialogMode === "setup") {
+        await onSetPassword?.(password);
+      } else if (!(await onDisablePassword?.(password))) {
+        setPasswordError("Incorrect password.");
+        return;
+      }
+      setIsPasswordDialogOpen(false);
+      setPassword("");
+      setConfirmPassword("");
+    } catch {
+      setPasswordError("Unable to save the password. Please try again.");
+    } finally {
+      setIsSavingPassword(false);
+    }
   };
 
   return (
@@ -33,8 +78,7 @@ export function BlockSettings({
         <div className="space-y-2">
           <h3 className="text-lg font-semibold tracking-tight text-foreground">Block Settings</h3>
           <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
-            Customize your block settings to control how websites are blocked with password
-            protection
+            Require a password before items can be removed from your block list
           </p>
         </div>
       </div>
@@ -46,7 +90,7 @@ export function BlockSettings({
               <LockIcon />
               Enable Password Protection
             </span>
-            <Switch checked={isPasswordEnabled} onCheckedChange={handlePasswordToggle} />
+            <Switch checked={passwordProtectionEnabled} onCheckedChange={handlePasswordToggle} />
           </div>
           <div className="flex items-center justify-between gap-4 py-5">
             <span className="truncate flex items-center gap-3 text-sm text-foreground">
@@ -58,25 +102,71 @@ export function BlockSettings({
         </div>
       </div>
 
-      <Dialog open={isPasswordEnabled} onOpenChange={setIsPasswordEnabled}>
+      <Dialog
+        open={isPasswordDialogOpen}
+        onOpenChange={(open) => {
+          if (!isSavingPassword) setIsPasswordDialogOpen(open);
+        }}
+      >
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">Set password</DialogTitle>
-            <DialogDescription>Create a password to protect your block settings.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" placeholder="Enter password" />
+          <form
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void savePassword();
+            }}
+          >
+            <DialogHeader>
+              <DialogTitle className="text-xl font-semibold">
+                {passwordDialogMode === "setup" ? "Set password" : "Disable password protection"}
+              </DialogTitle>
+              <DialogDescription>
+                {passwordDialogMode === "setup"
+                  ? "Create a password to prevent items from being removed from your block list."
+                  : "Enter your password to disable protection."}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="block-settings-password">Password</Label>
+                <Input
+                  id="block-settings-password"
+                  type="password"
+                  autoComplete={
+                    passwordDialogMode === "setup" ? "new-password" : "current-password"
+                  }
+                  placeholder="Enter password"
+                  value={password}
+                  disabled={isSavingPassword}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+              </div>
+              {passwordDialogMode === "setup" && (
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-block-settings-password">Confirm password</Label>
+                  <Input
+                    id="confirm-block-settings-password"
+                    type="password"
+                    autoComplete="new-password"
+                    placeholder="Confirm password"
+                    value={confirmPassword}
+                    disabled={isSavingPassword}
+                    onChange={(event) => setConfirmPassword(event.target.value)}
+                  />
+                </div>
+              )}
+              {passwordError && <p className="text-sm text-destructive">{passwordError}</p>}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm-password">Confirm password</Label>
-              <Input id="confirm-password" type="password" placeholder="Confirm password" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button type="submit">Save password</Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button type="submit" disabled={isSavingPassword}>
+                {isSavingPassword
+                  ? "Saving..."
+                  : passwordDialogMode === "setup"
+                    ? "Save password"
+                    : "Disable protection"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

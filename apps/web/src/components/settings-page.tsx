@@ -8,22 +8,28 @@ export function SettingsPage({
   showPomodoroTimer,
   customRedirectUrl,
   showContextMenu,
+  passwordProtectionEnabled,
   onSessionDurationChange,
   onBreakDurationChange,
   onShowPomodoroTimerChange,
   onCustomRedirectUrlChange,
   onShowContextMenuChange,
+  onSetBlockSettingsPassword,
+  onDisableBlockSettingsPassword,
 }: {
   sessionDuration?: number;
   breakDuration?: number;
   showPomodoroTimer?: boolean;
   customRedirectUrl?: string;
   showContextMenu?: boolean;
+  passwordProtectionEnabled?: boolean;
   onSessionDurationChange?: (minutes: number) => void;
   onBreakDurationChange?: (minutes: number) => void;
   onShowPomodoroTimerChange?: (show: boolean) => void;
   onCustomRedirectUrlChange?: (url: string) => void;
   onShowContextMenuChange?: (show: boolean) => void;
+  onSetBlockSettingsPassword?: (password: string) => void | Promise<void>;
+  onDisableBlockSettingsPassword?: (password: string) => boolean | Promise<boolean>;
 } = {}) {
   return (
     <main className="mx-auto w-full max-w-7xl p-3 sm:p-4 md:p-5">
@@ -36,7 +42,10 @@ export function SettingsPage({
       <div className="bg-card divide-y px-5 py-2 rounded-lg border text-card-foreground">
         <BlockSettings
           showContextMenu={showContextMenu}
+          passwordProtectionEnabled={passwordProtectionEnabled}
           onShowContextMenuChange={onShowContextMenuChange}
+          onSetPassword={onSetBlockSettingsPassword}
+          onDisablePassword={onDisableBlockSettingsPassword}
         />
         <PomodoroSettings
           sessionDuration={sessionDuration}

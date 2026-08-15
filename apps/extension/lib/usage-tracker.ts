@@ -2,6 +2,8 @@ import {
   domainMatches,
   getDomainCategoryIds,
   normalizeHostname,
+  isBlockingScheduleActive,
+  type BlockingSchedule,
   type BlockingSettings,
   type UsageSession,
 } from "@blockade/core";
@@ -9,6 +11,7 @@ import { browser } from "wxt/browser";
 
 import { checkpointUsage } from "./analytics-storage";
 import { getBlockingSettings } from "./blocking-storage";
+import { getScheduleSettings } from "./schedule-settings-storage";
 
 export const USAGE_CHECKPOINT_ALARM = "usage-checkpoint";
 export const USAGE_IDLE_THRESHOLD_SECONDS = 5 * 60;
@@ -16,16 +19,17 @@ let transitionQueue = Promise.resolve();
 
 export function refreshUsageSession() {
   return queueTransition(async (timestamp) => {
-    const [idleState, focusedWindow, settings] = await Promise.all([
+    const [idleState, focusedWindow, settings, schedule] = await Promise.all([
       browser.idle.queryState(USAGE_IDLE_THRESHOLD_SECONDS),
       browser.windows.getLastFocused({ populate: true, windowTypes: ["normal"] }),
       getBlockingSettings(),
+      getScheduleSettings(),
     ]);
     const activeTab = focusedWindow.focused
       ? focusedWindow.tabs?.find((tab) => tab.active)
       : undefined;
     return idleState === "active" && activeTab?.url
-      ? createUsageSession(activeTab.url, settings, timestamp)
+      ? createUsageSession(activeTab.url, settings, schedule, timestamp)
       : null;
   });
 }
@@ -42,8 +46,10 @@ export async function ensureUsageCheckpointAlarm() {
 function createUsageSession(
   urlValue: string,
   settings: BlockingSettings,
+  schedule: BlockingSchedule,
   timestamp: number,
 ): UsageSession | null {
+  if (!isBlockingScheduleActive(schedule, timestamp)) return null;
   const hostname = normalizeHostname(urlValue);
   if (!hostname || settings.excludedDomains.some((domain) => domainMatches(hostname, domain))) {
     return null;
@@ -67,8 +73,9 @@ function createUsageSession(
     }
   }
 
-  return itemIds.size > 0
-    ? { hostname, itemIds: Array.from(itemIds), checkpointAt: timestamp }
+  const tracksFocus = schedule.enabled;
+  return itemIds.size > 0 || tracksFocus
+    ? { hostname, itemIds: Array.from(itemIds), tracksFocus, checkpointAt: timestamp }
     : null;
 }
 

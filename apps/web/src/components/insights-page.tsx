@@ -17,7 +17,9 @@ import { useState } from "react";
 export type InsightsDay = {
   date: string;
   tracked: boolean;
+  scheduled: boolean;
   usageMinutes: number;
+  focusMinutes: number;
   blockAttempts: number;
   blockedAttemptsByWebsite: Record<string, number>;
   blockedAttemptsByCategory: Record<string, number>;
@@ -37,9 +39,10 @@ export function InsightsPage({ days = [] }: { days?: InsightsDay[] }) {
   const periodLabel = rangeItems.find((item) => item.value === range)?.label ?? "Last 7 days";
   const selectedDays = days.slice(-Number(range));
   const trackedDays = selectedDays.filter((day) => day.tracked);
-  const adherenceDays = trackedDays.filter((day) => day.limitsApplicable);
-  const totalUsage = selectedDays.reduce((total, day) => total + day.usageMinutes, 0);
+  const scheduledDays = trackedDays.filter((day) => day.scheduled);
+  const totalFocus = selectedDays.reduce((total, day) => total + day.focusMinutes, 0);
   const totalAttempts = selectedDays.reduce((total, day) => total + day.blockAttempts, 0);
+  const scheduledAttempts = scheduledDays.reduce((total, day) => total + day.blockAttempts, 0);
   const websiteAttempts = sumMaps(selectedDays.map((day) => day.blockedAttemptsByWebsite));
   const categoryAttempts = sumMaps(selectedDays.map((day) => day.blockedAttemptsByCategory));
   const topSites = Object.entries(websiteAttempts)
@@ -49,10 +52,10 @@ export function InsightsPage({ days = [] }: { days?: InsightsDay[] }) {
     .map(([category, attempts]) => ({ category, attempts }))
     .sort((a, b) => b.attempts - a.attempts);
   const streak = getCurrentStreak(days);
-  const score = adherenceDays.length
+  const score = scheduledDays.length
     ? Math.round(
-        (adherenceDays.filter((day) => day.limitsMet).length / adherenceDays.length) * 100 -
-          Math.min(20, totalAttempts * 2),
+        (scheduledDays.filter(isSuccessfulDay).length / scheduledDays.length) * 100 -
+          Math.min(20, scheduledAttempts * 2),
       )
     : null;
   const chartData = selectedDays.map((day) => ({
@@ -93,8 +96,8 @@ export function InsightsPage({ days = [] }: { days?: InsightsDay[] }) {
         </Select>
       </div>
       <MetricCard
-        distractionTime={{
-          value: formatMinutes(trackedDays.length ? totalUsage / trackedDays.length : 0),
+        focusTime={{
+          value: formatMinutes(scheduledDays.length ? totalFocus / scheduledDays.length : 0),
         }}
         blocksTriggered={{ value: String(totalAttempts) }}
         currentStreak={{ value: `${streak} ${streak === 1 ? "day" : "days"}` }}
@@ -124,17 +127,21 @@ function sumMaps(maps: Record<string, number>[]) {
 function getCurrentStreak(days: InsightsDay[]) {
   let streak = 0;
   let index = days.length - 1;
-  while (index >= 0 && (!days[index].tracked || !days[index].limitsApplicable)) index -= 1;
-  while (
-    index >= 0 &&
-    days[index].tracked &&
-    days[index].limitsApplicable &&
-    days[index].limitsMet
-  ) {
+  while (index >= 0) {
+    const day = days[index];
+    if (!day.tracked || !day.scheduled) {
+      index -= 1;
+      continue;
+    }
+    if (!isSuccessfulDay(day)) break;
     streak += 1;
     index -= 1;
   }
   return streak;
+}
+
+function isSuccessfulDay(day: InsightsDay) {
+  return !day.limitsApplicable || day.limitsMet;
 }
 
 function formatMinutes(value: number) {
