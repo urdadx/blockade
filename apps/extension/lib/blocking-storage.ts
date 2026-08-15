@@ -4,6 +4,7 @@ import {
   getDomainCategoryIds,
   getLocalDateKey,
   isBlockingScheduleActive,
+  isAlwaysBlockedCategory,
   getCategoryDomains,
   getEffectiveBlockedDomains,
   sanitizeBlockingSettings,
@@ -238,13 +239,16 @@ function isDomainEnforced(
   settings: BlockingSettings,
   usageMsByItem: Record<string, number>,
 ): boolean {
+  const categoryIds = getDomainCategoryIds(domain).filter((id) =>
+    settings.enabledCategoryIds.includes(id),
+  );
+  if (categoryIds.some(isAlwaysBlockedCategory)) return true;
+
   const applicableIds = [
     ...(settings.customBlockedDomains.some((item) => domainMatches(domain, item))
       ? [`website:${domain}`]
       : []),
-    ...getDomainCategoryIds(domain)
-      .filter((id) => settings.enabledCategoryIds.includes(id))
-      .map((id) => `category:${id}`),
+    ...categoryIds.map((id) => `category:${id}`),
   ];
 
   return applicableIds.some((itemId) => {

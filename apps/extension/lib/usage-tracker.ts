@@ -3,6 +3,7 @@ import {
   getDomainCategoryIds,
   normalizeHostname,
   isBlockingScheduleActive,
+  isAlwaysBlockedCategory,
   type BlockingSchedule,
   type BlockingSettings,
   type UsageSession,
@@ -65,7 +66,7 @@ function createUsageSession(
   for (const categoryId of getDomainCategoryIds(hostname)) {
     const itemId = `category:${categoryId}`;
     if (
-      categoryId !== "adult" &&
+      !isAlwaysBlockedCategory(categoryId) &&
       settings.enabledCategoryIds.includes(categoryId) &&
       isFiniteLimit(settings.dailyLimits[itemId])
     ) {

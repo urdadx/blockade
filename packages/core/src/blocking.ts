@@ -11,11 +11,11 @@ export type BlockingSettings = {
   dailyLimits: Record<string, string>;
 };
 
-export const blockingSettingsVersion = 2;
+export const blockingSettingsVersion = 3;
 
 export const defaultBlockingSettings: BlockingSettings = {
   version: blockingSettingsVersion,
-  enabledCategoryIds: ["adult"],
+  enabledCategoryIds: ["adult", "gambling"],
   excludedDomains: [],
   customBlockedDomains: [],
   blockedKeywords: [],
@@ -57,10 +57,15 @@ export function domainMatches(hostname: string, domain: string): boolean {
 
 export function sanitizeBlockingSettings(value: Partial<BlockingSettings>): BlockingSettings {
   const validCategoryIds = new Set<CategoryId>(categoryIds);
-  const configuredCategoryIds =
-    value.version === blockingSettingsVersion
-      ? (value.enabledCategoryIds ?? defaultBlockingSettings.enabledCategoryIds)
-      : defaultBlockingSettings.enabledCategoryIds;
+  const configuredCategoryIds = (() => {
+    if (value.version === blockingSettingsVersion) {
+      return value.enabledCategoryIds ?? defaultBlockingSettings.enabledCategoryIds;
+    }
+    if (value.version === 2) {
+      return [...(value.enabledCategoryIds ?? []), "gambling" as const];
+    }
+    return defaultBlockingSettings.enabledCategoryIds;
+  })();
   const enabledCategoryIds = Array.from(
     new Set(configuredCategoryIds.filter((id): id is CategoryId => validCategoryIds.has(id))),
   );

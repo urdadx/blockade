@@ -34,7 +34,7 @@ export function FocusTimeChart({ data, dateRange, periodLabel }: FocusTimeChartP
         <div className="flex min-w-0 flex-col gap-1 text-left">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span className="size-2 shrink-0 rounded bg-orange-500" />
-            <span>Focus time</span>
+            <span>Weekly focus time</span>
           </div>
           <p className="font-display text-2xl font-semibold text-foreground tabular-nums">
             {Math.floor(totalMinutes / 60)}h {totalMinutes % 60}m

@@ -8,10 +8,12 @@ import {
 } from "@tanstack/react-router";
 import {
   blockCategories,
+  alwaysBlockedCategoryIds,
   domainMatches,
   getCategoryDomains,
   getLocalDateKey,
   getScheduledMinutesForDate,
+  isAlwaysBlockedCategory,
   type CategoryId,
 } from "@blockade/core";
 import { StrictMode } from "react";
@@ -68,7 +70,7 @@ function ExtensionBlockListPage() {
       usedMinutes: (usage[`category:${category.id}`] ?? 0) / 60_000,
       type: "category" as const,
       imageUrl: categoryImages[category.id],
-      dailyLimitApplicable: category.id !== "adult",
+      dailyLimitApplicable: !isAlwaysBlockedCategory(category.id),
     }));
   const websiteRows = settings.customBlockedDomains
     .filter(
@@ -143,7 +145,10 @@ function ExtensionInsightsPage() {
   const analytics = useAnalyticsState();
   const schedule = useScheduleSettings();
   const finiteLimits = Object.entries(settings.dailyLimits).filter(
-    ([itemId, limit]) => !itemId.startsWith("keyword:") && limit !== "none",
+    ([itemId, limit]) =>
+      !itemId.startsWith("keyword:") &&
+      !alwaysBlockedCategoryIds.some((id) => itemId === `category:${id}`) &&
+      limit !== "none",
   );
   const days = Array.from({ length: 90 }, (_, index) => {
     const date = new Date();

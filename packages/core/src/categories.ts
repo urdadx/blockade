@@ -2,6 +2,15 @@ export const categoryIds = ["adult", "social", "news", "sports", "shopping", "ga
 
 export type CategoryId = (typeof categoryIds)[number];
 
+export const alwaysBlockedCategoryIds = [
+  "adult",
+  "gambling",
+] as const satisfies readonly CategoryId[];
+
+export function isAlwaysBlockedCategory(categoryId: CategoryId) {
+  return alwaysBlockedCategoryIds.some((id) => id === categoryId);
+}
+
 export type BlockCategory = {
   id: CategoryId;
   label: string;

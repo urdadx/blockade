@@ -29,7 +29,7 @@ type MetricItem = Metric & {
 
 function TrendIndicator({ trend }: { trend?: ReactNode }) {
   if (trend == null) {
-    return <span className="text-sm text-muted-foreground">-</span>;
+    return "";
   }
 
   const numericTrend =
@@ -40,7 +40,7 @@ function TrendIndicator({ trend }: { trend?: ReactNode }) {
         : Number.NaN;
 
   if (numericTrend === 0) {
-    return <span className="text-sm text-muted-foreground">-</span>;
+    return ""
   }
 
   const isDown = numericTrend < 0;
