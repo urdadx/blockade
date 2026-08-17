@@ -44,6 +44,14 @@
 }
 
 @font-face {
+  font-family: "font-landing";
+  src: url("./assets/fonts/SF-Pro-Rounded-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
   font-family: "Inter";
   src: url("./assets/fonts/inter/Inter-Regular.ttf") format("truetype");
   font-weight: 400;
@@ -229,6 +237,7 @@
 
 @theme inline {
   --font-sans: "Inter", sans-serif;
+  --font-landing: "font-landing", sans-serif;
   --font-display: "Erode", sans-serif;
   --font-roobert: "Roobert", monospace;
   --color-sidebar-ring: var(--sidebar-ring);

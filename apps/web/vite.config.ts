@@ -27,7 +27,7 @@ export default defineConfig({
         theme_color: "#0c0c0c",
       },
       pwaAssets: { disabled: false, config: true },
-      devOptions: { enabled: true },
-    })
+      devOptions: { enabled: false },
+    }),
   ],
 });

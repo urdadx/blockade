@@ -1,6 +1,6 @@
 import { CheckMarkIcon } from "@/assets/icons/checkmark-icon";
 import { SearchIcon, SearchLinear } from "@/assets/icons/search-icon";
-import { Button } from "@/components/button";
+import { Button, buttonVariants } from "@/components/button";
 import {
 	Dialog,
 	DialogClose,
@@ -19,6 +19,7 @@ import { categoryImages } from "@/data/category-images";
 import { blockCategories, normalizeKeyword, normalizeWebsiteDomain } from "@blockade/core";
 import { PlusIcon, TagIcon } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Kbd } from "./kbd";
 
 type CategoryDataset = {
 	id: "adult" | "social" | "news" | "sports" | "shopping" | "gambling";
@@ -253,8 +254,8 @@ export function AddBlockListDialog({
 
 	return (
 		<Dialog>
-			<DialogTrigger render={<Button className={className} />}>
-				<PlusIcon />
+			<DialogTrigger type="button" className={buttonVariants({ className })}>
+				<Kbd className="mr-1 bg-white/30 text-white ">A</Kbd>
 				Add to block list
 			</DialogTrigger>
 			<DialogContent className="flex onboarding-height max-w-xl flex-col gap-4 overflow-hidden p-0 sm:max-w-4xl">

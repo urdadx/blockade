@@ -98,11 +98,11 @@ export function ComboboxInput({
           className,
         )}
         data-slot="combobox-input"
+        data-size={typeof sizeValue === "string" ? sizeValue : undefined}
         render={
           <Input
             className="has-disabled:opacity-100"
-            nativeInput
-            size={sizeValue}
+            size={typeof sizeValue === "number" ? sizeValue : undefined}
           />
         }
         {...props}
@@ -141,11 +141,7 @@ export function ComboboxTrigger({
   ...props
 }: ComboboxPrimitive.Trigger.Props): React.ReactElement {
   return (
-    <ComboboxPrimitive.Trigger
-      className={className}
-      data-slot="combobox-trigger"
-      {...props}
-    >
+    <ComboboxPrimitive.Trigger className={className} data-slot="combobox-trigger" {...props}>
       {children}
     </ComboboxPrimitive.Trigger>
   );
@@ -269,10 +265,7 @@ export function ComboboxGroupLabel({
 }: ComboboxPrimitive.GroupLabel.Props): React.ReactElement {
   return (
     <ComboboxPrimitive.GroupLabel
-      className={cn(
-        "px-2 py-1.5 font-medium text-muted-foreground text-xs",
-        className,
-      )}
+      className={cn("px-2 py-1.5 font-medium text-muted-foreground text-xs", className)}
       data-slot="combobox-group-label"
       {...props}
     />
@@ -299,24 +292,17 @@ export function ComboboxRow({
   className,
   ...props
 }: ComboboxPrimitive.Row.Props): React.ReactElement {
-  return (
-    <ComboboxPrimitive.Row
-      className={className}
-      data-slot="combobox-row"
-      {...props}
-    />
-  );
+  return <ComboboxPrimitive.Row className={className} data-slot="combobox-row" {...props} />;
 }
 
-export const ComboboxValue: typeof ComboboxPrimitive.Value =
-  ComboboxPrimitive.Value;
+export const ComboboxValue: typeof ComboboxPrimitive.Value = ComboboxPrimitive.Value;
 
 export function ComboboxList({
   className,
   ...props
 }: ComboboxPrimitive.List.Props): React.ReactElement {
   return (
-    <ScrollArea overscrollContain scrollbarGutter scrollFade>
+    <ScrollArea>
       <ComboboxPrimitive.List
         className={cn(
           "not-empty:scroll-py-1 not-empty:px-1 not-empty:py-1 in-data-has-overflow-y:pe-3",
@@ -333,13 +319,7 @@ export function ComboboxClear({
   className,
   ...props
 }: ComboboxPrimitive.Clear.Props): React.ReactElement {
-  return (
-    <ComboboxPrimitive.Clear
-      className={className}
-      data-slot="combobox-clear"
-      {...props}
-    />
-  );
+  return <ComboboxPrimitive.Clear className={className} data-slot="combobox-clear" {...props} />;
 }
 
 export function ComboboxStatus({
@@ -358,8 +338,7 @@ export function ComboboxStatus({
   );
 }
 
-export const ComboboxCollection: typeof ComboboxPrimitive.Collection =
-  ComboboxPrimitive.Collection;
+export const ComboboxCollection: typeof ComboboxPrimitive.Collection = ComboboxPrimitive.Collection;
 
 export function ComboboxChips({
   className,
@@ -414,9 +393,7 @@ export function ComboboxChip({
   );
 }
 
-export function ComboboxChipRemove(
-  props: ComboboxPrimitive.ChipRemove.Props,
-): React.ReactElement {
+export function ComboboxChipRemove(props: ComboboxPrimitive.ChipRemove.Props): React.ReactElement {
   return (
     <ComboboxPrimitive.ChipRemove
       aria-label="Remove"
@@ -429,7 +406,6 @@ export function ComboboxChipRemove(
   );
 }
 
-export const useComboboxFilter: typeof ComboboxPrimitive.useFilter =
-  ComboboxPrimitive.useFilter;
+export const useComboboxFilter: typeof ComboboxPrimitive.useFilter = ComboboxPrimitive.useFilter;
 
 export { ComboboxPrimitive };

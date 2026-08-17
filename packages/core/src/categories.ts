@@ -44,6 +44,8 @@ export const blockCategories = [
       "xnxx.com",
       "xvideos.com",
       "youporn.com",
+      "adultfriendfinder.com",
+      "fapello.com",
     ],
   },
   {
