@@ -1,7 +1,12 @@
 import { createAuthClient } from "better-auth/react";
 import { env } from "@blockade/env/web";
 
-function getServerUrl(url: string) {
+function getServerUrl(url?: string) {
+	if (!url) {
+		if (typeof window !== "undefined") return window.location.origin;
+		return "http://localhost:3000";
+	}
+
 	const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
 
 	if (!normalized.startsWith("/")) {
