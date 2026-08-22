@@ -52,6 +52,14 @@
 }
 
 @font-face {
+  font-family: "SF Pro Display";
+  src: url("./assets/fonts/SF-Pro-Display-Bold.otf") format("opentype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
   font-family: "Inter";
   src: url("./assets/fonts/inter/Inter-Regular.ttf") format("truetype");
   font-weight: 400;
@@ -239,6 +247,7 @@
   --font-sans: "Inter", sans-serif;
   --font-landing: "font-landing", sans-serif;
   --font-display: "Erode", sans-serif;
+  --font-sf-display: "SF Pro Display", sans-serif;
   --font-roobert: "Roobert", monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);

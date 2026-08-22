@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import type { SVGProps } from "react";
-import logoUrl from "../../public/logo.png";
+import logoUrl from "/logo.png?url";
 
 export function BrandLogo({ className, ...props }: SVGProps<SVGSVGElement>) {
   return (
