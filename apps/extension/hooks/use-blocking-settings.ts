@@ -9,13 +9,18 @@ export function useBlockingSettings() {
 
   useEffect(() => {
     let active = true;
+    let receivedUpdate = false;
+    const unsubscribe = subscribeToBlockingSettings((value) => {
+      receivedUpdate = true;
+      setSettings(value);
+      setIsLoading(false);
+    });
     void getBlockingSettings().then((value) => {
-      if (!active) return;
+      if (!active || receivedUpdate) return;
       setSettings(value);
       setIsLoading(false);
     });
 
-    const unsubscribe = subscribeToBlockingSettings(setSettings);
     return () => {
       active = false;
       unsubscribe();

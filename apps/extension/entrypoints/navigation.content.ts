@@ -21,8 +21,9 @@ export default defineContentScript({
           url: sourceUrl,
         })) as NavigationCheckResponse | undefined;
         if (window.location.href !== sourceUrl) return;
-        if (response?.baseUrl && sourceUrl !== response.baseUrl) {
-          window.location.replace(response.baseUrl);
+        if (response?.baseUrl && response.redirectUrl && sourceUrl !== response.redirectUrl) {
+          window.history.replaceState(null, "", response.baseUrl);
+          window.location.assign(response.redirectUrl);
         } else if (response?.redirectUrl && sourceUrl !== response.redirectUrl) {
           window.location.replace(response.redirectUrl);
         }
@@ -57,5 +58,6 @@ export default defineContentScript({
     window.addEventListener("pageshow", (event) => {
       if (event.persisted) void checkCurrentNavigation();
     });
+    void checkCurrentNavigation();
   },
 });

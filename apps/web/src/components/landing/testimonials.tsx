@@ -1,5 +1,6 @@
-import UserImage from "@/assets/jack_maaye.jpg";
+import UserImage from "@/assets/jack_maaye.avif";
 import Star from "@/assets/star.webp";
+import CollegeBoyImage from "@/assets/college_boy.avif";
 
 const testimonials = [
 	{
@@ -13,6 +14,7 @@ const testimonials = [
 			</>
 		),
 		name: "Jack Maaye",
+		avatar: UserImage,
 		description: "University Student",
 	},
 	{
@@ -25,8 +27,9 @@ const testimonials = [
 				and don't have to rely on willpower.
 			</>
 		),
-		name: "Sarah Williams",
-		description: "Content Creator",
+		name: "Sainz Williams",
+		avatar: CollegeBoyImage,
+		description: "Remote Worker",
 	},
 ];
 
@@ -54,7 +57,7 @@ export const Testimonials = () => {
 
 					<figcaption className="mt-4 flex items-center gap-2">
 						<img
-							src={UserImage}
+							src={testimonial.avatar}
 							alt={testimonial.name}
 							className="size-10 shrink-0 rounded-full object-cover shadow-sm"
 						/>

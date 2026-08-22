@@ -10,15 +10,15 @@ export const CTASection = () => {
 					<span>Block distractions.</span>
 					<span className="text-[#84888D]">
 						{" "}
-						Regain your focus. Take control of your time with tools that
-						help you stay focused, and build better habits.
+						Regain your focus. Take control of your time, stay productive,
+						and build better habits.
 					</span>
 				</h2>
 				<div className="pt-6 w-full flex items-center gap-4 min-[1600px]:gap-6">
 					<Button
 						variant="outline"
 						className="bg-black text-white hover:bg-black/80 rounded-full  text-sm font-medium px-6 py-5">
-						<Kbd className=" bg-white/30 rounded-sm text-white ">D</Kbd>
+						<Kbd className=" bg-white/30 rounded-sm text-white ">G</Kbd>
 						<span className="text-white hover:text-white/90">
 							Get Blockade extension
 						</span>

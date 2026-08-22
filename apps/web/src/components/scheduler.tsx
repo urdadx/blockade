@@ -1,18 +1,7 @@
 import type { BlockingSchedule } from "@blockade/core";
-import { ArrowRightIcon, SearchIcon } from "lucide-react";
+import { ArrowRightIcon, ClockIcon } from "lucide-react";
 
-import { Button } from "@/components/button";
-import {
-	Combobox,
-	ComboboxEmpty,
-	ComboboxInput,
-	ComboboxItem,
-	ComboboxList,
-	ComboboxPopup,
-	ComboboxTrigger,
-	ComboboxValue,
-} from "@/components/combobox";
-import { Group, GroupSeparator, GroupText } from "@/components/group";
+import { Input } from "@/components/input";
 import { Label } from "@/components/label";
 import { Switch } from "@/components/switch";
 
@@ -26,64 +15,51 @@ const days = [
 	{ label: "Sunday", index: 0 },
 ] as const;
 
-const timeOptions = Array.from({ length: 96 }, (_, index) => {
-	const hours = Math.floor(index / 4);
-	const minutes = (index % 4) * 15;
-	const period = hours < 12 ? "AM" : "PM";
-	const displayHours = hours % 12 === 0 ? 12 : hours % 12;
-	return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`;
-});
+function formatTime(totalMinutes: number) {
+	const hours = Math.floor(totalMinutes / 60);
+	const minutes = totalMinutes % 60;
+	return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+}
 
-function TimeCombobox({
+function parseTime(value: string) {
+	const [hours, minutes] = value.split(":").map(Number);
+	if (!Number.isInteger(hours) || !Number.isInteger(minutes)) return null;
+	if (hours! < 0 || hours! > 23 || minutes! < 0 || minutes! > 59) return null;
+	return hours * 60 + minutes;
+}
+
+function TimeInput({
 	ariaLabel,
-	items,
+	max,
+	min,
 	onChange,
-	value,
+	valueMinutes,
 }: {
 	ariaLabel: string;
-	items: string[];
-	onChange: (time: string) => void;
-	value: string;
+	max?: string;
+	min?: string;
+	onChange: (minutes: number) => void;
+	valueMinutes: number;
 }) {
 	return (
-		<Combobox
-			autoHighlight
-			items={items}
-			value={value}
-			onValueChange={(time) => {
-				if (typeof time === "string") onChange(time);
-			}}>
-			<ComboboxTrigger
+		<div className="relative">
+			<Input
 				aria-label={ariaLabel}
-				render={
-					<Button
-						className="w-24 font-normal tabular-nums"
-						size="sm"
-						variant="outline"
-					/>
-				}>
-				<ComboboxValue />
-			</ComboboxTrigger>
-			<ComboboxPopup aria-label={ariaLabel} className="min-w-44">
-				<div className="border-b p-2">
-					<ComboboxInput
-						className="rounded-md before:rounded-[calc(var(--radius-md)-1px)]"
-						placeholder="Search time"
-						showTrigger={false}
-						size="sm"
-						startAddon={<SearchIcon />}
-					/>
-				</div>
-				<ComboboxEmpty>No times found.</ComboboxEmpty>
-				<ComboboxList>
-					{(time: string) => (
-						<ComboboxItem key={time} value={time}>
-							<span className="tabular-nums">{time}</span>
-						</ComboboxItem>
-					)}
-				</ComboboxList>
-			</ComboboxPopup>
-		</Combobox>
+				className="w-28 appearance-none ps-8 pe-2 tabular-nums [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+				max={max}
+				min={min}
+				onChange={(event) => {
+					const minutes = parseTime(event.target.value);
+					if (minutes !== null) onChange(minutes);
+				}}
+				step={60}
+				type="time"
+				value={formatTime(valueMinutes)}
+			/>
+			<div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-muted-foreground/80">
+				<ClockIcon aria-hidden="true" className="size-4" />
+			</div>
+		</div>
 	);
 }
 
@@ -104,18 +80,6 @@ export default function Scheduler({
 		<div className="divide-y">
 			{days.map((day) => {
 				const daySchedule = value.days[day.index];
-				const startIndex = daySchedule
-					? Math.min(
-							Math.floor(daySchedule.startMinute / 15),
-							timeOptions.length - 1,
-						)
-					: 0;
-				const endIndex = daySchedule
-					? Math.min(
-							Math.floor(daySchedule.endMinute / 15),
-							timeOptions.length - 1,
-						)
-					: 0;
 
 				return (
 					<div
@@ -140,50 +104,46 @@ export default function Scheduler({
 						</Label>
 
 						{daySchedule ? (
-							<Group
+							<div
 								aria-label={`${day.label} schedule`}
-								className="w-fit">
-								<TimeCombobox
+								className="flex w-fit items-center gap-2">
+								<TimeInput
 									ariaLabel={`${day.label} start time`}
-									items={timeOptions.slice(0, -1)}
-									value={timeOptions[startIndex]!}
-									onChange={(start) => {
-										const startMinute =
-											timeOptions.indexOf(start) * 15;
+									max="23:58"
+									valueMinutes={daySchedule.startMinute}
+									onChange={(startMinute) => {
 										const endMinute =
 											startMinute >=
 											daySchedule.endMinute
 												? Math.min(
 														startMinute +
 															60,
-														23 * 60 + 45,
+														24 * 60 - 1,
 													)
-												: daySchedule.endMinute;
+											: daySchedule.endMinute;
 										updateDay(day.index, {
 											startMinute,
 											endMinute,
 										});
 									}}
 								/>
-								<GroupSeparator />
-								<GroupText aria-hidden="true" className="px-2">
-									<ArrowRightIcon className="size-3.5" />
-								</GroupText>
-								<GroupSeparator />
-								<TimeCombobox
+								<ArrowRightIcon
+									aria-hidden="true"
+									className="size-3.5 shrink-0 text-muted-foreground"
+								/>
+								<TimeInput
 									ariaLabel={`${day.label} end time`}
-									items={timeOptions.slice(startIndex + 1)}
-									value={timeOptions[endIndex]!}
-									onChange={(end) =>
+									min={formatTime(daySchedule.startMinute + 1)}
+									valueMinutes={daySchedule.endMinute}
+									onChange={(endMinute) => {
+										if (endMinute <= daySchedule.startMinute) return;
 										updateDay(day.index, {
 											...daySchedule,
-											endMinute:
-												timeOptions.indexOf(end) *
-												15,
-										})
-									}
+											endMinute,
+										});
+									}}
 								/>
-							</Group>
+							</div>
 						) : (
 							<p className="flex h-8 items-center text-sm text-muted-foreground">
 								Not scheduled

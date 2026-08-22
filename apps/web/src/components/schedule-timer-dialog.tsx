@@ -58,15 +58,6 @@ export function ScheduleTimerDialog({
 				</DialogHeader>
 				<Scheduler value={draft} onChange={setDraft} />
 				<DialogFooter className="flex-wrap">
-					{schedule.enabled && (
-						<Button
-							type="button"
-							variant="destructive"
-							disabled={isSaving}
-							onClick={() => void save(defaultBlockingSchedule)}>
-							Disable schedule
-						</Button>
-					)}
 					<DialogClose
 						disabled={isSaving}
 						render={<Button type="button" variant="outline" />}>

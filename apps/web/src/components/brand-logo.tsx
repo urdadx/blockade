@@ -1,6 +1,6 @@
+import logoUrl from "@/assets/blockade-logo.png";
 import { cn } from "@/lib/utils";
 import type { SVGProps } from "react";
-import logoUrl from "/logo.png?url";
 
 export function BrandLogo({ className, ...props }: SVGProps<SVGSVGElement>) {
   return (
@@ -18,7 +18,7 @@ export function BrandLogo({ className, ...props }: SVGProps<SVGSVGElement>) {
       </defs>
       <g clipPath="url(#brand-logo-clip)">
         <rect width="64" height="64" className="fill-primary" />
-        <image href={logoUrl} x="4" y="4" width="56" height="56" />
+		<image href={logoUrl} x="4" y="4" width="56" height="56" />
       </g>
     </svg>
   );

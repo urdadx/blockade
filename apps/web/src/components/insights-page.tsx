@@ -44,12 +44,8 @@ export function InsightsPage({ days = [] }: { days?: InsightsDay[] }) {
   const totalAttempts = selectedDays.reduce((total, day) => total + day.blockAttempts, 0);
   const scheduledAttempts = scheduledDays.reduce((total, day) => total + day.blockAttempts, 0);
   const websiteAttempts = sumMaps(selectedDays.map((day) => day.blockedAttemptsByWebsite));
-  const categoryAttempts = sumMaps(selectedDays.map((day) => day.blockedAttemptsByCategory));
   const topSites = Object.entries(websiteAttempts)
     .map(([domain, attempts]) => ({ domain, attempts }))
-    .sort((a, b) => b.attempts - a.attempts);
-  const topCategories = Object.entries(categoryAttempts)
-    .map(([category, attempts]) => ({ category, attempts }))
     .sort((a, b) => b.attempts - a.attempts);
   const streak = getCurrentStreak(days);
   const score = scheduledDays.length
@@ -110,7 +106,7 @@ export function InsightsPage({ days = [] }: { days?: InsightsDay[] }) {
       </div>
       <div className="mt-5 grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-2">
         <TopBlockedSites sites={topSites} />
-        <TopCategoriesChart data={topCategories} />
+        <TopCategoriesChart data={topSites} />
       </div>
     </main>
   );

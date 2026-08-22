@@ -10,13 +10,14 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/tooltip";
 import { getWebsiteFaviconUrl } from "@/lib/utils";
 import {
 	type ColumnDef,
+	type Row,
 	flexRender,
 	getCoreRowModel,
 	getPaginationRowModel,
 	useReactTable,
 } from "@tanstack/react-table";
 import { TagBoldIcon } from "./tag-icon";
-import { useMemo, useCallback } from "react";
+import { memo, useCallback, useLayoutEffect, useMemo, useRef } from "react";
 
 export type BlockedSite = {
 	id: string;
@@ -32,6 +33,20 @@ export type BlockedSite = {
 const hiddenDefaultKeywords = new Set<string>(
 	defaultAdultKeywords.map((keyword) => keyword.toLowerCase()),
 );
+const alwaysBlockedSiteIds = new Set(alwaysBlockedCategoryIds.map((id) => `category:${id}`));
+
+function areBlockedSitesEqual(previous: BlockedSite, next: BlockedSite) {
+	return (
+		previous.id === next.id &&
+		previous.name === next.name &&
+		previous.url === next.url &&
+		previous.dailyLimit === next.dailyLimit &&
+		previous.usedMinutes === next.usedMinutes &&
+		previous.type === next.type &&
+		previous.imageUrl === next.imageUrl &&
+		previous.dailyLimitApplicable === next.dailyLimitApplicable
+	);
+}
 
 function DeleteAction({
 	site,
@@ -41,9 +56,7 @@ function DeleteAction({
 	onDelete: (siteId: string) => void;
 }) {
 	if (site.type === "category") {
-		const isAlwaysBlocked = alwaysBlockedCategoryIds.some(
-			(id) => site.id === `category:${id}`,
-		);
+		const isAlwaysBlocked = alwaysBlockedSiteIds.has(site.id);
 		if (!isAlwaysBlocked) return null;
 
 		return (
@@ -54,7 +67,8 @@ function DeleteAction({
 						size="icon-sm"
 						className="text-muted-foreground"
 						aria-label={`${site.name} cannot be deleted`}
-						disabled>
+						disabled
+					>
 						<TrashBinLinear color="currentColor" className="size-4" />
 					</Button>
 				</TooltipTrigger>
@@ -69,18 +83,41 @@ function DeleteAction({
 			size="icon-sm"
 			className="text-muted-foreground hover:text-destructive"
 			aria-label={`Delete ${site.name}`}
-			onClick={() => onDelete(site.id)}>
+			onClick={() => onDelete(site.id)}
+		>
 			<TrashBinLinear color="currentColor" className="size-4" />
 		</Button>
 	);
 }
 
 function isAlwaysBlockedSite(site: BlockedSite) {
-	return (
-		site.type === "category" &&
-		alwaysBlockedCategoryIds.some((id) => site.id === `category:${id}`)
-	);
+	return site.type === "category" && alwaysBlockedSiteIds.has(site.id);
 }
+
+const BlockListRow = memo(
+	function BlockListRow({ row }: { row: Row<BlockedSite> }) {
+		return (
+			<TableRow className="h-16">
+				{row.getVisibleCells().map((cell) => (
+					<TableCell
+						key={cell.id}
+						className={
+							cell.column.id === "name"
+								? "h-16 px-4 py-1"
+								: cell.column.id === "actions"
+									? "h-16 py-1 pr-4 text-right"
+									: "h-16 py-1"
+						}
+						style={{ width: `${cell.column.getSize()}px` }}
+					>
+						{flexRender(cell.column.columnDef.cell, cell.getContext())}
+					</TableCell>
+				))}
+			</TableRow>
+		);
+	},
+	(previous, next) => areBlockedSitesEqual(previous.row.original, next.row.original),
+);
 
 function getColumns({
 	onLimitChange,
@@ -113,9 +150,7 @@ function getColumns({
 					) : (
 						<TagBoldIcon className="size-7 rounded bg-muted p-1 text-muted-foreground" />
 					)}
-					<span className="block max-w-40 truncate sm:max-w-48">
-						{row.original.name}
-					</span>
+					<span className="block max-w-40 truncate sm:max-w-48">{row.original.name}</span>
 				</div>
 			),
 		},
@@ -130,11 +165,7 @@ function getColumns({
 						onValueChange={(value) => onLimitChange(row.original.id, value)}
 					/>
 				) : isAlwaysBlockedSite(row.original) ? (
-					<DailyLimitSelect
-						value="none"
-						onValueChange={() => undefined}
-						disabled
-					/>
+					<DailyLimitSelect value="none" onValueChange={() => undefined} disabled />
 				) : (
 					<span className="text-sm text-muted-foreground">Not applicable</span>
 				),
@@ -145,16 +176,9 @@ function getColumns({
 			size: 280,
 			cell: ({ row }) => (
 				<UsageLimit
-					dailyLimit={
-						isAlwaysBlockedSite(row.original)
-							? "none"
-							: row.original.dailyLimit
-					}
+					dailyLimit={isAlwaysBlockedSite(row.original) ? "none" : row.original.dailyLimit}
 					usedMinutes={row.original.usedMinutes}
-					applicable={
-						isAlwaysBlockedSite(row.original) ||
-						row.original.dailyLimitApplicable
-					}
+					applicable={isAlwaysBlockedSite(row.original) || row.original.dailyLimitApplicable}
 				/>
 			),
 		},
@@ -180,21 +204,25 @@ export function BlockListTable({
 	typeFilter?: BlockedSite["type"];
 } = {}) {
 	const filteredSites = useMemo(() => {
-		const visibleSites = sites.filter(
+		return sites.filter(
 			(site) =>
-				site.type !== "keyword" ||
-				!hiddenDefaultKeywords.has(site.name.toLowerCase()),
+				(!typeFilter || site.type === typeFilter) &&
+				(site.type !== "keyword" || !hiddenDefaultKeywords.has(site.name.toLowerCase())),
 		);
-		return typeFilter
-			? visibleSites.filter((site) => site.type === typeFilter)
-			: visibleSites;
 	}, [sites, typeFilter]);
 
+	const onDailyLimitChangeRef = useRef(onDailyLimitChange);
+	const onDeleteSiteRef = useRef(onDeleteSite);
+	useLayoutEffect(() => {
+		onDailyLimitChangeRef.current = onDailyLimitChange;
+		onDeleteSiteRef.current = onDeleteSite;
+	}, [onDailyLimitChange, onDeleteSite]);
+
 	const handleLimitChange = useCallback(
-		(siteId: string, value: string) => onDailyLimitChange?.(siteId, value),
-		[onDailyLimitChange],
+		(siteId: string, value: string) => onDailyLimitChangeRef.current?.(siteId, value),
+		[],
 	);
-	const handleDelete = useCallback((siteId: string) => onDeleteSite?.(siteId), [onDeleteSite]);
+	const handleDelete = useCallback((siteId: string) => onDeleteSiteRef.current?.(siteId), []);
 
 	const columns = useMemo(
 		() => getColumns({ onLimitChange: handleLimitChange, onDelete: handleDelete }),
@@ -204,6 +232,7 @@ export function BlockListTable({
 	const table = useReactTable({
 		data: filteredSites,
 		columns,
+		getRowId: (site) => site.id,
 		getCoreRowModel: getCoreRowModel(),
 		getPaginationRowModel: getPaginationRowModel(),
 		initialState: {
@@ -213,76 +242,45 @@ export function BlockListTable({
 			},
 		},
 	});
+	const rows = table.getRowModel().rows;
 	return (
 		<div className="space-y-3">
 			<CardFrame className="w-full max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border bg-card shadow-none md:max-w-full">
-				<Table
-					variant="card"
-					className="min-w-full"
-					style={{ width: `${table.getTotalSize()}px` }}>
+				<Table variant="card" className="min-w-full" style={{ width: `${table.getTotalSize()}px` }}>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow
 								key={headerGroup.id}
-								className="h-10 bg-muted/50 text-foreground hover:bg-sidebar-accent">
+								className="h-10 bg-muted/50 text-foreground hover:bg-sidebar-accent"
+							>
 								{headerGroup.headers.map((header) => (
 									<TableHead
 										key={header.id}
-										className={
-											header.column.id === "name"
-												? "h-10 px-4"
-												: "h-10"
-										}
+										className={header.column.id === "name" ? "h-10 px-4" : "h-10"}
 										style={{
 											width: `${header.getSize()}px`,
-										}}>
+										}}
+									>
 										{header.isPlaceholder
 											? null
-											: flexRender(
-													header.column
-														.columnDef
-														.header,
-													header.getContext(),
-												)}
+											: flexRender(header.column.columnDef.header, header.getContext())}
 									</TableHead>
 								))}
 							</TableRow>
 						))}
 					</TableHeader>
 					<TableBody>
-						{table.getRowModel().rows.length === 0 ? (
+						{rows.length === 0 ? (
 							<TableRow>
 								<TableCell
 									colSpan={columns.length}
-									className="h-24 text-center text-muted-foreground">
+									className="h-24 text-center text-muted-foreground"
+								>
 									No blocked items.
 								</TableCell>
 							</TableRow>
 						) : (
-							table.getRowModel().rows.map((row) => (
-								<TableRow key={row.id} className="h-16">
-									{row.getVisibleCells().map((cell) => (
-										<TableCell
-											key={cell.id}
-											className={
-												cell.column.id === "name"
-													? "h-16 px-4 py-1"
-													: cell.column.id ===
-														  "actions"
-														? "h-16 py-1 pr-4 text-right"
-														: "h-16 py-1"
-											}
-											style={{
-												width: `${cell.column.getSize()}px`,
-											}}>
-											{flexRender(
-												cell.column.columnDef.cell,
-												cell.getContext(),
-											)}
-										</TableCell>
-									))}
-								</TableRow>
-							))
+							rows.map((row) => <BlockListRow key={row.id} row={row} />)
 						)}
 					</TableBody>
 				</Table>
@@ -290,8 +288,7 @@ export function BlockListTable({
 			{filteredSites.length > 20 && (
 				<div className="flex items-center justify-between gap-3">
 					<p className="text-sm text-muted-foreground">
-						Page {table.getState().pagination.pageIndex + 1} of{" "}
-						{table.getPageCount()}
+						Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
 					</p>
 					<div className="flex gap-2">
 						<Button
@@ -299,7 +296,8 @@ export function BlockListTable({
 							variant="outline"
 							size="sm"
 							disabled={!table.getCanPreviousPage()}
-							onClick={() => table.previousPage()}>
+							onClick={() => table.previousPage()}
+						>
 							Previous
 						</Button>
 						<Button
@@ -307,7 +305,8 @@ export function BlockListTable({
 							variant="outline"
 							size="sm"
 							disabled={!table.getCanNextPage()}
-							onClick={() => table.nextPage()}>
+							onClick={() => table.nextPage()}
+						>
 							Next
 						</Button>
 					</div>

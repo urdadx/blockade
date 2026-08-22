@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <clipPath id="frame"><rect width="1200" height="630" rx="48"/></clipPath>
+    <pattern id="dots" width="34" height="34" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="2" fill="#e5e7eb"/>
+    </pattern>
+    <pattern id="connector" width="34" height="34" patternUnits="userSpaceOnUse">
+      <circle cx="4" cy="4" r="4" fill="#4f9dca"/>
+    </pattern>
+  </defs>
+  <g clip-path="url(#frame)">
+    <image xlink:href="../src/assets/background.avif" width="1200" height="630" preserveAspectRatio="xMidYMid slice"/>
+    <rect x="64" y="48" width="1072" height="534" rx="32" fill="white"/>
+    <rect x="64" y="48" width="1072" height="534" rx="32" fill="url(#dots)"/>
+    <rect x="465" y="264" width="270" height="102" fill="white"/>
+    <rect x="465" y="264" width="270" height="102" fill="url(#connector)"/>
+    <rect x="250" y="205" width="220" height="220" rx="40" fill="#55a0cf"/>
+    <image xlink:href="logo.png" x="280" y="235" width="160" height="160" preserveAspectRatio="xMidYMid meet"/>
+    <rect x="730" y="205" width="220" height="220" rx="40" fill="#000"/>
+    <image xlink:href="../src/assets/chrome_mono.png" x="730" y="205" width="220" height="220" preserveAspectRatio="xMidYMid slice"/>
+  </g>
+</svg>

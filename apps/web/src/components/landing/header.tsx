@@ -2,12 +2,12 @@ import { Button } from "@/components/button";
 import { BrandLogo } from "@/components/brand-logo";
 import { cn } from "@/lib/utils";
 import { Link } from "@tanstack/react-router";
-import ChromeIcon from "@/assets/chrome.png";
+import ChromeIcon from "@/assets/chrome.avif";
 
 const menuItems = [
 	{ name: "Features", href: "#features" },
 	{ name: "Github", href: "https://github.com/urdadx/blockade" },
-	{ name: "FAQs", href: "#faqs" },
+	{ name: "Testimonials", href: "#testimonials" },
 ];
 
 export const Header = () => {

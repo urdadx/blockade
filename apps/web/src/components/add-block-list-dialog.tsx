@@ -17,8 +17,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/tabs";
 import { getWebsiteFaviconUrl } from "@/lib/utils";
 import { categoryImages } from "@/data/category-images";
 import { blockCategories, normalizeKeyword, normalizeWebsiteDomain } from "@blockade/core";
+import { useHotkeys } from "@tanstack/react-hotkeys";
 import { PlusIcon, TagIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import {
+	memo,
+	type CSSProperties,
+	useCallback,
+	useDeferredValue,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { Kbd } from "./kbd";
 
 type CategoryDataset = {
@@ -46,8 +55,13 @@ const websites = Array.from(new Set(categories.flatMap((category) => category.do
 );
 
 const adultDomains = new Set(categories.find((category) => category.id === "adult")?.domains ?? []);
+const nonAdultWebsites = websites.filter((domain) => !adultDomains.has(domain));
+const optionRenderingStyle = {
+	contentVisibility: "auto",
+	containIntrinsicSize: "auto 58px",
+} satisfies CSSProperties;
 
-function AddOption({
+const AddOption = memo(function AddOption({
 	id,
 	label,
 	image,
@@ -63,7 +77,10 @@ function AddOption({
 	onToggle: (id: string) => void;
 }) {
 	return (
-		<div className="flex min-w-0 items-center gap-2 rounded-lg border bg-card p-2.5 transition-colors duration-150 hover:bg-muted/40">
+		<div
+			className="flex min-w-0 items-center gap-2 rounded-lg border bg-card p-2.5 transition-colors duration-150 hover:bg-muted/40"
+			style={optionRenderingStyle}
+		>
 			{image ? (
 				<img
 					src={image}
@@ -83,14 +100,71 @@ function AddOption({
 				variant={selected ? "ghost" : "outline"}
 				className="text-foreground/80 hover:bg-transparent hover:text-foreground"
 				aria-label={selected ? `Remove ${label} from selection` : `Select ${label}`}
-				onClick={() => onToggle(id)}>
+				onClick={() => onToggle(id)}
+			>
 				{selected ? <CheckMarkIcon color="green" /> : <PlusIcon />}
 			</Button>
 		</div>
 	);
-}
+});
 
-function NoResults({
+const CategoryGrid = memo(function CategoryGrid({
+	items,
+	selectedItems,
+	onToggle,
+}: {
+	items: CategoryDataset[];
+	selectedItems: Set<string>;
+	onToggle: (id: string) => void;
+}) {
+	return (
+		<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+			{items.map((category) => {
+				const id = `category:${category.id}`;
+				return (
+					<AddOption
+						key={id}
+						id={id}
+						label={category.label}
+						image={categoryImages[category.id]}
+						selected={selectedItems.has(id)}
+						onToggle={onToggle}
+					/>
+				);
+			})}
+		</div>
+	);
+});
+
+const WebsiteGrid = memo(function WebsiteGrid({
+	domains,
+	selectedItems,
+	onToggle,
+}: {
+	domains: string[];
+	selectedItems: Set<string>;
+	onToggle: (id: string) => void;
+}) {
+	return (
+		<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+			{domains.map((domain) => {
+				const id = `website:${domain}`;
+				return (
+					<AddOption
+						key={id}
+						id={id}
+						label={domain}
+						image={getWebsiteFaviconUrl(domain)}
+						selected={selectedItems.has(id)}
+						onToggle={onToggle}
+					/>
+				);
+			})}
+		</div>
+	);
+});
+
+const NoResults = memo(function NoResults({
 	query,
 	website,
 	keyword,
@@ -111,9 +185,7 @@ function NoResults({
 				<EmptyDescription>No existing item matches “{query}”</EmptyDescription>
 				<div className="mt-2 flex flex-wrap justify-center gap-2">
 					{website && (
-						<Button
-							type="button"
-							onClick={() => onSelect(`website:${website}`)}>
+						<Button type="button" onClick={() => onSelect(`website:${website}`)}>
 							<PlusIcon /> Add {website} as website
 						</Button>
 					)}
@@ -121,7 +193,8 @@ function NoResults({
 						<Button
 							type="button"
 							variant={website ? "outline" : "default"}
-							onClick={() => onSelect(`keyword:${keyword}`)}>
+							onClick={() => onSelect(`keyword:${keyword}`)}
+						>
 							<TagIcon /> Add “{keyword}” as keyword
 						</Button>
 					)}
@@ -129,7 +202,7 @@ function NoResults({
 			</EmptyHeader>
 		</Empty>
 	);
-}
+});
 
 export function AddBlockListDialog({
 	className,
@@ -138,11 +211,33 @@ export function AddBlockListDialog({
 	className?: string;
 	onAdd?: (items: string[]) => void | Promise<void>;
 }) {
+	const triggerRef = useRef<HTMLButtonElement>(null);
 	const [query, setQuery] = useState("");
 	const [selectedItems, setSelectedItems] = useState<Set<string>>(() => new Set());
-	const normalizedQuery = query.trim().toLowerCase();
-	const customWebsite = normalizeWebsiteDomain(query);
-	const customKeyword = customWebsite ? null : normalizeKeyword(query);
+	const deferredQuery = useDeferredValue(query);
+	const trimmedQuery = deferredQuery.trim();
+	const normalizedQuery = trimmedQuery.toLowerCase();
+	const customWebsite = normalizeWebsiteDomain(deferredQuery);
+	const customKeyword = customWebsite ? null : normalizeKeyword(deferredQuery);
+
+	useHotkeys(
+		[
+			{
+				hotkey: "A",
+				callback: () => triggerRef.current?.click(),
+				options: {
+					meta: {
+						name: "Add to block list",
+						description: "Open the add to block list dialog",
+					},
+				},
+			},
+		],
+		{
+			ignoreInputs: true,
+			requireReset: true,
+		},
+	);
 
 	const filteredCategories = useMemo(
 		() =>
@@ -158,50 +253,24 @@ export function AddBlockListDialog({
 		() => websites.filter((domain) => !normalizedQuery || domain.includes(normalizedQuery)),
 		[normalizedQuery],
 	);
+	const filteredNonAdultWebsites = useMemo(
+		() => nonAdultWebsites.filter((domain) => !normalizedQuery || domain.includes(normalizedQuery)),
+		[normalizedQuery],
+	);
 
-	const toggleItem = (id: string) => {
+	const toggleItem = useCallback((id: string) => {
 		setSelectedItems((current) => {
 			const next = new Set(current);
 			if (next.has(id)) next.delete(id);
 			else next.add(id);
 			return next;
 		});
-	};
+	}, []);
 
-	const addSelectedItems = () => {
+	const addSelectedItems = useCallback(() => {
 		void onAdd?.([...selectedItems]);
 		setSelectedItems(new Set());
-	};
-
-	const categoryGrid = (
-		<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-			{filteredCategories.map((category) => (
-				<AddOption
-					key={category.id}
-					id={`category:${category.id}`}
-					label={category.label}
-					image={categoryImages[category.id]}
-					selected={selectedItems.has(`category:${category.id}`)}
-					onToggle={toggleItem}
-				/>
-			))}
-		</div>
-	);
-
-	const websiteGrid = (
-		<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-			{filteredWebsites.map((domain) => (
-				<AddOption
-					key={domain}
-					id={`website:${domain}`}
-					label={domain}
-					image={getWebsiteFaviconUrl(domain)}
-					selected={selectedItems.has(`website:${domain}`)}
-					onToggle={toggleItem}
-				/>
-			))}
-		</div>
-	);
+	}, [onAdd, selectedItems]);
 
 	const keywordGrid = customKeyword ? (
 		<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -226,26 +295,10 @@ export function AddBlockListDialog({
 		</Empty>
 	);
 
-	const allTabWebsiteGrid = (
-		<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-			{filteredWebsites
-				.filter((domain) => !adultDomains.has(domain))
-				.map((domain) => (
-					<AddOption
-						key={domain}
-						id={`website:${domain}`}
-						label={domain}
-						image={getWebsiteFaviconUrl(domain)}
-						selected={selectedItems.has(`website:${domain}`)}
-						onToggle={toggleItem}
-					/>
-				))}
-		</div>
-	);
-	const hasAnySearchResults = filteredCategories.length > 0 || filteredWebsites.length > 0;
+	const hasAnySearchResults = filteredCategories.length > 0 || filteredNonAdultWebsites.length > 0;
 	const noResults = normalizedQuery ? (
 		<NoResults
-			query={query.trim()}
+			query={trimmedQuery}
 			website={customWebsite}
 			keyword={customKeyword}
 			onSelect={toggleItem}
@@ -254,7 +307,10 @@ export function AddBlockListDialog({
 
 	return (
 		<Dialog>
-			<DialogTrigger type="button" className={buttonVariants({ className })}>
+			<DialogTrigger
+				ref={triggerRef}
+				type="button"
+				className={buttonVariants({ className })}>
 				<Kbd className="mr-1 bg-white/30 text-white ">A</Kbd>
 				Add to block list
 			</DialogTrigger>
@@ -263,9 +319,7 @@ export function AddBlockListDialog({
 					<DialogTitle className="font-display font-semibold text-2xl">
 						Add to block list
 					</DialogTitle>
-					<DialogDescription>
-						Choose categories or individual websites to block.
-					</DialogDescription>
+					<DialogDescription>Choose categories or individual websites to block.</DialogDescription>
 				</DialogHeader>
 
 				<div className="relative px-6">
@@ -278,45 +332,44 @@ export function AddBlockListDialog({
 					/>
 				</div>
 
-				<Tabs
-					defaultValue="all"
-					className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
+				<Tabs defaultValue="all" className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
 					<div className="hide-scrollbar shrink-0 overflow-x-auto   px-6 py-1">
 						<TabsList className="w-max min-w-full justify-start bg-transparent">
-							{["All", "Websites", "Keywords", "Categories"].map(
-								(tab) => (
-									<TabsTrigger
-										key={tab}
-										value={tab.toLowerCase()}
-										className="data-[state=active]:bg-muted data-[state=active]:shadow-none">
-										{tab}
-									</TabsTrigger>
-								),
-							)}
+							{["All", "Websites", "Keywords", "Categories"].map((tab) => (
+								<TabsTrigger
+									key={tab}
+									value={tab.toLowerCase()}
+									className="data-[state=active]:bg-muted data-[state=active]:shadow-none"
+								>
+									{tab}
+								</TabsTrigger>
+							))}
 						</TabsList>
 					</div>
 
-					<TabsContent
-						value="all"
-						className="mt-0 min-h-0 flex-1 overflow-y-auto px-6 pb-6">
+					<TabsContent value="all" className="mt-0 min-h-0 flex-1 overflow-y-auto px-6 pb-6">
 						{normalizedQuery && !hasAnySearchResults ? (
 							<div className="pt-3">{noResults}</div>
 						) : (
 							<div className="space-y-5 pt-3">
 								{filteredCategories.length > 0 && (
 									<section>
-										<h3 className="mb-2 text-lg font-semibold">
-											Categories
-										</h3>
-										{categoryGrid}
+										<h3 className="mb-2 text-lg font-semibold">Categories</h3>
+										<CategoryGrid
+											items={filteredCategories}
+											selectedItems={selectedItems}
+											onToggle={toggleItem}
+										/>
 									</section>
 								)}
-								{filteredWebsites.length > 0 && (
+								{filteredNonAdultWebsites.length > 0 && (
 									<section>
-										<h3 className="mb-2 text-lg font-semibold">
-											Websites
-										</h3>
-										{allTabWebsiteGrid}
+										<h3 className="mb-2 text-lg font-semibold">Websites</h3>
+										<WebsiteGrid
+											domains={filteredNonAdultWebsites}
+											selectedItems={selectedItems}
+											onToggle={toggleItem}
+										/>
 									</section>
 								)}
 							</div>
@@ -324,24 +377,41 @@ export function AddBlockListDialog({
 					</TabsContent>
 					<TabsContent
 						value="websites"
-						className="mt-0 min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-3">
-						{filteredWebsites.length > 0 ? websiteGrid : noResults}
+						className="mt-0 min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-3"
+					>
+						{filteredWebsites.length > 0 ? (
+							<WebsiteGrid
+								domains={filteredWebsites}
+								selectedItems={selectedItems}
+								onToggle={toggleItem}
+							/>
+						) : (
+							noResults
+						)}
 					</TabsContent>
 					<TabsContent
 						value="keywords"
-						className="mt-0 min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-3">
+						className="mt-0 min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-3"
+					>
 						{keywordGrid}
 					</TabsContent>
 					<TabsContent
 						value="categories"
-						className="mt-0 min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-3">
-						{filteredCategories.length > 0 ? categoryGrid : noResults}
+						className="mt-0 min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-3"
+					>
+						{filteredCategories.length > 0 ? (
+							<CategoryGrid
+								items={filteredCategories}
+								selectedItems={selectedItems}
+								onToggle={toggleItem}
+							/>
+						) : (
+							noResults
+						)}
 					</TabsContent>
 				</Tabs>
 				<DialogFooter className="px-5 py-4">
-					<DialogClose render={<Button variant="outline" />}>
-						Cancel
-					</DialogClose>
+					<DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
 					<DialogClose
 						render={
 							<Button
@@ -349,7 +419,8 @@ export function AddBlockListDialog({
 								disabled={selectedItems.size === 0}
 								onClick={addSelectedItems}
 							/>
-						}>
+						}
+					>
 						Add to block list ({selectedItems.size})
 					</DialogClose>
 				</DialogFooter>

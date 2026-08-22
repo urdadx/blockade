@@ -2,6 +2,7 @@ import {
   domainMatches,
   getDomainCategoryIds,
   normalizeHostname,
+  isHostnameExcluded,
   isBlockingScheduleActive,
   isAlwaysBlockedCategory,
   type BlockingSchedule,
@@ -18,8 +19,8 @@ export const USAGE_CHECKPOINT_ALARM = "usage-checkpoint";
 export const USAGE_IDLE_THRESHOLD_SECONDS = 5 * 60;
 let transitionQueue = Promise.resolve();
 
-export function refreshUsageSession() {
-  return queueTransition(async (timestamp) => {
+export function refreshUsageSession(timestamp = Date.now()) {
+  return queueTransition(timestamp, async () => {
     const [idleState, focusedWindow, settings, schedule] = await Promise.all([
       browser.idle.queryState(USAGE_IDLE_THRESHOLD_SECONDS),
       browser.windows.getLastFocused({ populate: true, windowTypes: ["normal"] }),
@@ -36,7 +37,7 @@ export function refreshUsageSession() {
 }
 
 export function stopUsageSession() {
-  return queueTransition(() => null);
+  return queueTransition(Date.now(), () => null);
 }
 
 export async function ensureUsageCheckpointAlarm() {
@@ -52,7 +53,7 @@ function createUsageSession(
 ): UsageSession | null {
   if (!isBlockingScheduleActive(schedule, timestamp)) return null;
   const hostname = normalizeHostname(urlValue);
-  if (!hostname || settings.excludedDomains.some((domain) => domainMatches(hostname, domain))) {
+  if (!hostname || isHostnameExcluded(hostname, settings)) {
     return null;
   }
 
@@ -85,10 +86,10 @@ function isFiniteLimit(value: string | undefined): boolean {
 }
 
 function queueTransition(
+  timestamp: number,
   getNextSession: (timestamp: number) => Promise<UsageSession | null> | UsageSession | null,
 ) {
   const operation = transitionQueue.then(async () => {
-    const timestamp = Date.now();
     await checkpointUsage(await getNextSession(timestamp), timestamp);
   });
   transitionQueue = operation.catch(() => undefined);
