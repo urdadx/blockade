@@ -4,6 +4,30 @@ Blockade is a chrome extension that blocks distracting websites so you can regai
 
 ## Features
 
+### Blocklist
+
+Easily add new websites and keywords to your blocklist. Blockade helps you add
+websites or keywords that are stealing your focus to your blocklist.
+
+### Scheduler
+
+Schedule your focus sessions and get locked out when it's time. Take control of
+your day by letting Blockade lock you out of distracting websites and apps
+during your designated focus time.
+
+### Analytics & Insights
+
+Insights and detailed analytics to help you be better. Know how you spend your
+time and get insights into your focus sessions. Blockade provides analytics to
+help you understand your habits and improve your productivity.
+
+### Pomodoro Timer
+
+Built in Pomodoro timer to help you stay focused and productive. Set your focus
+sessions and take breaks to recharge.
+
+### Tech Stack
+
 - **TypeScript** - For type safety and improved developer experience
 - **TanStack Router** - File-based routing with full type safety
 - **TailwindCSS** - Utility-first CSS for rapid UI development
