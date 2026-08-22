@@ -48,9 +48,7 @@ export const Header = () => {
 								variant="outline"
 								className="rounded-full px-4 py-2 text-sm font-medium sm:px-2 sm:py-4">
 								<img src={ChromeIcon} alt="" className="size-5" />
-								<span className="hidden sm:inline">
-									Download extension
-								</span>
+								<span>Download extension</span>
 							</Button>
 						</div>
 					</div>
