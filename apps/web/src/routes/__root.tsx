@@ -15,7 +15,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 	head: () => ({
 		meta: [
 			{
-				title: "Blockade",
+				title: "Blockade | Block distracting websites",
 			},
 			{
 				name: "description",
