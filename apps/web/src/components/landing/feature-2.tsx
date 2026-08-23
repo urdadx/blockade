@@ -68,7 +68,7 @@ export const Feature2 = forwardRef<HTMLDivElement>(function Feature2(_, ref) {
 			className="grid scroll-mt-32 gap-6 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-12">
 			<div className="flex flex-col justify-start pt-5">
 				<h3 className="max-w-xl text-3xl font-medium">
-					Schedule your focus sessions and get locked out when it’s time
+					Schedule your sessions and get locked out when it’s time
 				</h3>
 				<p className="mt-6 max-w-xl text-base font-medium text-muted-foreground">
 					Take control your day by letting Blockade lock you out of distracting
