@@ -30,7 +30,7 @@ function SchedulePreview() {
 							{day}
 						</span>
 						{enabled ? (
-							<div className="ml-auto flex items-center gap-1.5 text-[10px] tabular-nums text-black/65 sm:text-xs">
+							<div className="ml-auto flex items-center gap-1.5 text-[13px] tabular-nums text-black/65 sm:text-xs">
 								<span className="rounded border border-black/10 px-1.5 py-1">
 									9:00 AM
 								</span>
