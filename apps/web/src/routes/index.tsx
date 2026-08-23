@@ -5,12 +5,33 @@ import { FeaturesSection } from "@/components/landing/features";
 import { FooterCTA } from "@/components/landing/footer-cta";
 import { StatsSection } from "@/components/landing/stats-section";
 import { Testimonials } from "@/components/landing/testimonials";
+import { openExtensionGuide } from "@/lib/extension-download";
+import { useHotkeys } from "@tanstack/react-hotkeys";
 
 export const Route = createFileRoute("/")({
 	component: HomeComponent,
 });
 
 function HomeComponent() {
+	useHotkeys(
+		[
+			{
+				hotkey: "G",
+				callback: openExtensionGuide,
+				options: {
+					meta: {
+						name: "Get Blockade",
+						description: "Open the extension installation guide",
+					},
+				},
+			},
+		],
+		{
+			ignoreInputs: true,
+			requireReset: true,
+		},
+	);
+
 	return (
 		<main className="flex flex-col min-h-screen items-center justify-start text-black bg-white">
 			<div className="w-full">

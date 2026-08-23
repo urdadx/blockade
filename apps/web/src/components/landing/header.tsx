@@ -2,7 +2,12 @@ import { Button } from "@/components/button";
 import { BrandLogo } from "@/components/brand-logo";
 import { cn } from "@/lib/utils";
 import { Link } from "@tanstack/react-router";
-import ChromeIcon from "@/assets/chrome.avif";
+import {
+	getExtensionDownload,
+	openExtensionGuide,
+	type ExtensionDownload,
+} from "@/lib/extension-download";
+import { useEffect, useState } from "react";
 
 const menuItems = [
 	{ name: "Features", href: "#features" },
@@ -11,6 +16,12 @@ const menuItems = [
 ];
 
 export const Header = () => {
+	const [download, setDownload] = useState<ExtensionDownload | null>(null);
+
+	useEffect(() => {
+		setDownload(getExtensionDownload());
+	}, []);
+
 	return (
 		<header className="h-16 border-b bg-white">
 			<nav className="fixed inset-x-0 top-0 z-20 h-18 border-b bg-white/90 px-4 backdrop-blur-lg">
@@ -45,9 +56,17 @@ export const Header = () => {
 
 						<div className="shrink-0 flex items-center gap-2 md:gap-4">
 							<Button
+								type="button"
 								variant="outline"
+								onClick={openExtensionGuide}
 								className="rounded-full px-4 py-2 text-sm font-medium sm:px-2 sm:py-4">
-								<img src={ChromeIcon} alt="" className="size-5" />
+								{download && (
+									<img
+										src={download.icon}
+										alt=""
+										className="size-5 object-contain"
+									/>
+								)}
 								<span>Download extension</span>
 							</Button>
 						</div>
