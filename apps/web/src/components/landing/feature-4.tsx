@@ -1,8 +1,7 @@
-import BackgroundImage from "@/assets/background.avif";
+import BackgroundImage from "@/assets/background_green.png";
 import { Play, RotateCcw } from "lucide-react";
 import { forwardRef } from "react";
 import { Button } from "../button";
-import { TimerIcon } from "@/assets/icons/timer";
 
 function StaticDigit({ digit }: { digit: string }) {
 	return (
@@ -18,7 +17,6 @@ function StaticFlipClock() {
 		<div className="h-[260px] w-[320px] max-w-full overflow-hidden rounded-xl border border-black/10 bg-white p-5 font-sans shadow-2xl shadow-black/15 md:h-[340px] md:w-[320px] xl:h-[280px] xl:w-[380px] min-[1600px]:h-[440px] min-[1600px]:w-[400px]">
 			<div className="text-center flex items-center justify-center gap-1 text-sm font-medium  sm:text-base">
 				<h4 className="font-display text-2xl font-semibold">Time to focus</h4>
-				<TimerIcon color="#5AA1E7" className="size-6 inline-block ml-1" />
 			</div>
 
 			<div className="mt-4 flex items-center justify-center gap-1.5 sm:mt-6 xl:gap-2">
