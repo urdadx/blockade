@@ -49,9 +49,9 @@ export function FeaturesSection() {
 	}, []);
 
 	return (
-		<section className="py-0 sm:py-12">
+		<section className="py-0 sm:py-10">
 			<div className="mx-auto max-w-6xl min-[1600px]:max-w-[90rem]">
-				<h2 className="text-muted-foreground px-6 sm:px-0 max-w-4xl font-display leading-[1.3] font-medium tracking-[-0.02em] text-foreground text-2xl sm:text-[38px] font-medium ">
+				<h2 className="text-muted-foreground hidden sm:block px-6 sm:px-0 max-w-4xl font-display leading-[1.3] font-medium tracking-[-0.02em] text-foreground text-2xl sm:text-[38px] font-medium ">
 					<span className="text-foreground">Built for the full workflow.</span>{" "}
 					<br /> Stay focused on what matters
 				</h2>
