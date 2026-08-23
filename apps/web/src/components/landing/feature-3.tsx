@@ -1,4 +1,4 @@
-import BackgroundImage from "@/assets/background_red.png";
+import BackgroundImage from "@/assets/background_red.avif";
 import { TopBlockedSites } from "@/components/top-blocked-sites";
 import { forwardRef } from "react";
 

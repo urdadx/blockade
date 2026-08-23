@@ -1,4 +1,4 @@
-import BackgroundImage from "@/assets/background_purple.png";
+import BackgroundImage from "@/assets/background_purple.avif";
 import { ArrowRight } from "lucide-react";
 import { forwardRef } from "react";
 import { Button } from "../button";
