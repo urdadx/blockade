@@ -1,5 +1,6 @@
 import { Button } from "@/components/button";
 import { ImageCTA } from "@/components/landing/image-cta";
+import { openExtensionGuide } from "@/lib/extension-download";
 import { Kbd } from "../kbd";
 
 export const CTASection = () => {
@@ -16,7 +17,9 @@ export const CTASection = () => {
 				</h2>
 				<div className="pt-6 w-full flex items-center gap-4 min-[1600px]:gap-6">
 					<Button
+						type="button"
 						variant="outline"
+						onClick={openExtensionGuide}
 						className="bg-black text-white hover:bg-black/80 rounded-full  text-sm font-medium px-6 py-5">
 						<Kbd className=" bg-white/30 rounded-sm text-white ">G</Kbd>
 						<span className="text-white hover:text-white/90">
