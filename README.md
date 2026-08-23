@@ -1,6 +1,6 @@
-# blockade
+# Blockade
 
-Blockade is a browser extension that blocks distracting websites so you can regain your focus.
+Blockade is a browser extension that blocks distracting websites so you can stay more productive.
 
 ## Install Blockade
 
@@ -61,25 +61,8 @@ First, install the dependencies:
 pnpm install
 ```
 
-## Database Setup
 
-This project uses SQLite with Drizzle ORM.
-
-1. Start the local SQLite database (optional):
-
-```bash
-pnpm run db:local
-```
-
-2. Update your `.env` file in the `apps/server` directory with the appropriate connection details if needed.
-
-3. Apply the schema to your database:
-
-```bash
-pnpm run db:push
-```
-
-Then, run the development server:
+Run the development server:
 
 ```bash
 pnpm run dev
@@ -95,32 +78,6 @@ pnpm run dev:extension
 ```
 
 WXT opens a Chrome profile with the extension loaded. The operational dashboard is available from the extension popup and stores its block list locally in browser storage. If Chrome is installed in a non-standard location, configure its path in `apps/extension/web-ext.config.ts` using WXT's `binaries.chrome` option. Production extension files are generated in `apps/extension/.output` by `pnpm run build:extension`.
-
-## UI Customization
-
-The web app keeps its shadcn/ui primitives alongside its other components.
-
-- Change design tokens and global styles in `apps/web/src/index.css`
-- Update primitives in `apps/web/src/components/*`
-- Adjust shadcn aliases or style config in `apps/web/components.json`
-
-### Add more components
-
-Run this from the project root to add more primitives to the web app:
-
-```bash
-npx shadcn@latest add accordion dialog popover sheet table -c apps/web
-```
-
-Import shared components like this:
-
-```tsx
-import { Button } from "@/components/button";
-```
-
-### Add app-specific blocks
-
-If you want to add app-specific blocks instead of shared primitives, run the shadcn CLI from `apps/web`.
 
 ## Deployment
 
@@ -166,11 +123,6 @@ blockade/
 - `pnpm run build:extension`: Build the Chrome extension
 - `pnpm run zip:extension`: Package the Chrome extension for distribution
 - `pnpm run check-types`: Check TypeScript types across all apps
-- `pnpm run db:push`: Push schema changes to database
-- `pnpm run db:generate`: Generate database client/types
-- `pnpm run db:migrate`: Run database migrations
-- `pnpm run db:studio`: Open database studio UI
-- `pnpm run db:local`: Start the local SQLite database
 - `pnpm run check`: Run Oxlint and Oxfmt
 - `cd apps/web && pnpm run generate-pwa-assets`: Generate PWA assets
 - `pnpm run docker:build`: Build the Docker Compose images
