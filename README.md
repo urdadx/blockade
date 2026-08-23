@@ -1,6 +1,17 @@
 # blockade
 
-Blockade is a chrome extension that blocks distracting websites so you can regain your focus.
+Blockade is a browser extension that blocks distracting websites so you can regain your focus.
+
+## Install Blockade
+
+Download the latest release and follow the guide for your browser:
+
+- [Google Chrome installation](docs/install/chrome.md)
+- [Mozilla Firefox installation](docs/install/firefox.md)
+- [Microsoft Edge installation](docs/install/edge.md)
+- [Safari availability](docs/install/safari.md)
+
+Release downloads are available on the [GitHub Releases page](https://github.com/urdadx/blockade/releases/latest).
 
 ## Features
 
