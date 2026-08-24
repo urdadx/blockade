@@ -25,10 +25,10 @@ export const Feature3 = forwardRef<HTMLDivElement>(function Feature3(_, ref) {
 			id="timeline"
 			className="grid min-w-0 scroll-mt-32 gap-6 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-12">
 			<div className="flex flex-col justify-start pt-5">
-				<h3 className="max-w-xl text-3xl font-medium">
+				<h3 className="max-w-xl text-2xl sm:text-3xl font-medium">
 					Insights and analytics to help you be better
 				</h3>
-				<p className="mt-6 max-w-xl text-base font-medium text-muted-foreground">
+				<p className="mt-4 sm:mt-6 max-w-xl text-[15px] sm:text-base font-medium text-muted-foreground">
 					Know how you spend your time and get insights into your focus
 					sessions. Blockade helps you understand your habits.
 				</p>

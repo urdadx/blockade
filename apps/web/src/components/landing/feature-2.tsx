@@ -31,12 +31,13 @@ function SchedulePreview() {
 						</span>
 						{enabled ? (
 							<div className="ml-auto flex items-center gap-1.5 text-[13px] tabular-nums text-black/65 sm:text-xs">
-								<span className="rounded border border-black/10 px-1.5 py-1">
-									9:00 AM
+								<span className="rounded flex border border-black/10 px-1.5 py-1">
+									9:00 <span className="ml-1 hidden sm:flex">AM</span>
 								</span>
 								<ArrowRight className="size-3" />
-								<span className="rounded border border-black/10 px-1.5 py-1">
-									5:00 PM
+								<span className="rounded flex border border-black/10 px-1.5 py-1">
+									5:00
+									<span className="ml-1 hidden sm:flex">AM</span>
 								</span>
 							</div>
 						) : (
@@ -48,7 +49,7 @@ function SchedulePreview() {
 				))}
 			</div>
 
-			<div className="mt-4 flex justify-end gap-2">
+			<div className="mt-4 hidden sm:flex justify-end gap-2">
 				<Button variant="outline" size="sm">
 					Cancel
 				</Button>
@@ -67,11 +68,11 @@ export const Feature2 = forwardRef<HTMLDivElement>(function Feature2(_, ref) {
 			id="alerts"
 			className="grid min-w-0 scroll-mt-32 gap-6 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-12">
 			<div className="flex flex-col justify-start pt-5">
-				<h3 className="max-w-xl text-3xl font-medium">
+				<h3 className="max-w-xl text-2xl sm:text-black font-medium">
 					Schedule your sessions and get locked out when it’s time
 				</h3>
-				<p className="mt-6 max-w-xl text-base font-medium text-muted-foreground">
-					Take control your day by letting Blockade lock you out of distracting
+				<p className="mt-4 sm:mt-6 max-w-xl text-[15px] sm:text-base  font-medium text-muted-foreground">
+					Take control your day by letting Blockade lock you out of
 					websites and apps during your designated focus time
 				</p>
 			</div>
