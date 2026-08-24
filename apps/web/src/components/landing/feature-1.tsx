@@ -6,7 +6,7 @@ import { Button } from "../button";
 
 function PopupPreview() {
 	return (
-		<div className="h-[350px] w-[320px] max-w-full overflow-hidden rounded-xl border border-black/10 bg-white font-sans shadow-2xl shadow-black/15 md:h-[340px] md:w-[320px] xl:h-[400px] xl:w-[380px] min-[1600px]:h-[440px] min-[1600px]:w-[400px]">
+		<div className="h-[350px] w-full max-w-[320px] overflow-hidden rounded-xl border border-black/10 bg-white font-sans shadow-2xl shadow-black/15 md:h-[340px] xl:h-[400px] xl:max-w-[380px] min-[1600px]:h-[440px] min-[1600px]:max-w-[400px]">
 			<div className="flex items-center justify-between px-5 py-4">
 				<div className="flex items-center gap-1.5 font-display text-lg font-semibold">
 					<BrandLogo className="size-7" />
@@ -44,7 +44,7 @@ export const Feature1 = forwardRef<HTMLDivElement>(function Feature1(_, ref) {
 		<div
 			ref={ref}
 			id="workflow-agents"
-			className="grid scroll-mt-32 gap-6 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-12">
+			className="grid min-w-0 scroll-mt-32 gap-6 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-12">
 			<div className="flex flex-col justify-start pt-5">
 				<h3 className="max-w-xl text-3xl font-medium">
 					Easily add new websites and keywords to your blocklist
@@ -56,7 +56,7 @@ export const Feature1 = forwardRef<HTMLDivElement>(function Feature1(_, ref) {
 			</div>
 			<div
 				aria-hidden="true"
-				className="flex aspect-[6/7] items-center justify-center rounded-3xl bg-cover bg-center p-6 sm:p-10"
+				className="flex min-w-0 aspect-[6/7] items-center justify-center rounded-3xl bg-cover bg-center p-3 sm:p-10"
 				style={{ backgroundImage: `url(${BackgroundImage})` }}>
 				<PopupPreview />
 			</div>

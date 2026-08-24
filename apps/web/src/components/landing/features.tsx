@@ -49,13 +49,13 @@ export function FeaturesSection() {
 	}, []);
 
 	return (
-		<section className="py-0  sm:py-10">
-			<div className="mx-auto max-w-6xl min-[1600px]:max-w-[90rem]">
+		<section className="w-full min-w-0 py-0 sm:py-10">
+			<div className="mx-auto w-full min-w-0 max-w-6xl min-[1600px]:max-w-[90rem]">
 				<h2 className="text-muted-foreground hidden sm:block px-6 sm:px-0 max-w-4xl font-display leading-[1.3] font-medium tracking-[-0.02em] text-foreground text-2xl sm:text-[38px] font-medium ">
 					<span className="text-foreground">Built for the full workflow.</span>{" "}
 					<br /> Stay focused on what matters
 				</h2>
-				<div className="grid gap-6 px-6 sm:mt-10 sm:px-0 lg:grid-cols-[auto_1fr]">
+				<div className="grid min-w-0 gap-6 px-6 sm:mt-10 sm:px-0 lg:grid-cols-[auto_minmax(0,1fr)]">
 					<div className="sticky top-24 h-fit w-56 max-lg:hidden">
 						<div className="-ml-4 mt-4 flex flex-col *:justify-start">
 							{features.map((feature) => (
@@ -75,7 +75,7 @@ export function FeaturesSection() {
 							))}
 						</div>
 					</div>
-					<div className="flex flex-col gap-16 md:gap-32">
+					<div className="flex min-w-0 flex-col gap-16 md:gap-32">
 						<Feature1
 							ref={(element) => {
 								sectionRefs.current.blocklist = element;

@@ -33,7 +33,7 @@ function HomeComponent() {
 	);
 
 	return (
-		<main className="flex flex-col min-h-screen items-center justify-start text-black bg-white">
+		<main className="flex min-h-screen w-full min-w-0 flex-col items-center justify-start overflow-x-clip bg-white text-black">
 			<div className="w-full">
 				<Header />
 			</div>

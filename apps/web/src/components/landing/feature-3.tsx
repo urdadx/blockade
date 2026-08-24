@@ -12,7 +12,7 @@ const blockedSites = [
 
 function AnalyticsPreview() {
 	return (
-		<div className="h-[370px] w-[320px] max-w-full overflow-hidden rounded-xl bg-white font-sans shadow-2xl shadow-black/15 md:h-[340px] md:w-[320px] xl:h-[400px] xl:w-[380px] min-[1600px]:h-[440px] min-[1600px]:w-[400px]">
+		<div className="h-[370px] w-full max-w-[320px] overflow-hidden rounded-xl bg-white font-sans shadow-2xl shadow-black/15 md:h-[340px] xl:h-[400px] xl:max-w-[380px] min-[1600px]:h-[440px] min-[1600px]:max-w-[400px]">
 			<TopBlockedSites className="h-full border-black/10" sites={blockedSites} />
 		</div>
 	);
@@ -23,7 +23,7 @@ export const Feature3 = forwardRef<HTMLDivElement>(function Feature3(_, ref) {
 		<div
 			ref={ref}
 			id="timeline"
-			className="grid scroll-mt-32 gap-6 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-12">
+			className="grid min-w-0 scroll-mt-32 gap-6 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-12">
 			<div className="flex flex-col justify-start pt-5">
 				<h3 className="max-w-xl text-3xl font-medium">
 					Insights and analytics to help you be better
@@ -35,7 +35,7 @@ export const Feature3 = forwardRef<HTMLDivElement>(function Feature3(_, ref) {
 			</div>
 			<div
 				aria-hidden="true"
-				className="flex aspect-[6/7] items-center justify-center rounded-3xl bg-cover bg-center p-6 sm:p-10"
+				className="flex min-w-0 aspect-[6/7] items-center justify-center rounded-3xl bg-cover bg-center p-3 sm:p-10"
 				style={{ backgroundImage: `url(${BackgroundImage})` }}>
 				<AnalyticsPreview />
 			</div>
