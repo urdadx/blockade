@@ -42,15 +42,7 @@ sessions and take breaks to recharge.
 - **TypeScript** - For type safety and improved developer experience
 - **TanStack Router** - File-based routing with full type safety
 - **TailwindCSS** - Utility-first CSS for rapid UI development
-- **Web UI components** - shadcn/ui primitives live with the web app
-- **Hono** - Lightweight, performant server framework
-- **tRPC** - End-to-end type-safe APIs
-- **Node.js** - Runtime environment
-- **Drizzle** - TypeScript-first ORM
-- **SQLite/Turso** - Database engine
-- **Authentication** - Better-Auth
 - **Oxlint** - Oxlint + Oxfmt (linting & formatting)
-- **PWA** - Progressive Web App support
 - **WXT** - Chrome extension framework
 
 ## Getting Started
