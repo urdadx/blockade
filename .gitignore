@@ -59,3 +59,9 @@ temp
 
 # Launch video (Remotion)
 apps/video
+
+# Agent skills (installed locally with `npx skills add`)
+.agents/
+.claude/skills/
+skills-lock.json
+.claude/launch.json
