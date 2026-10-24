@@ -1,6 +1,6 @@
 # Blockade for Safari
 
-Blockade `v0.0.1` does not include a Safari download.
+Blockade `v0.5` does not include a Safari download.
 
 Safari web extensions must be built and packaged on macOS with Xcode before they can be installed. The current release was produced on Linux, so a Safari app bundle could not be generated or validated.
 

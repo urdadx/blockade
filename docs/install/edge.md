@@ -4,7 +4,7 @@ Blockade is distributed for Edge as a Manifest V3 extension.
 
 ## Installation
 
-1. Download [`extension-0.0.1-edge.zip`](https://github.com/urdadx/blockade/releases/download/v0.0.1/extension-0.0.1-edge.zip).
+1. Download [`extension-0.5.0-edge.zip`](https://github.com/urdadx/blockade/releases/download/v0.5/extension-0.5.0-edge.zip).
 2. Extract the ZIP file to a permanent folder. Edge loads the extension from this folder, so do not delete it after installation.
 3. Open `edge://extensions` in Edge.
 4. Enable **Developer mode** in the left sidebar.
