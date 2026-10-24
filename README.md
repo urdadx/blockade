@@ -2,6 +2,12 @@
 
 Blockade is a browser extension that blocks distracting websites so you can stay more productive.
 
+<a href="docs/media/blockade-launch.mp4">
+  <img src="docs/media/blockade-launch-poster.jpg" alt="Blockade launch video: blocking tiktok.com from the extension popup" width="720">
+</a>
+
+▶ [Watch the demo video](docs/media/blockade-launch.mp4) (41s)
+
 ## Install Blockade
 
 Download the latest release and follow the guide for your browser:
@@ -71,25 +77,6 @@ pnpm run dev:extension
 
 WXT opens a Chrome profile with the extension loaded. The operational dashboard is available from the extension popup and stores its block list locally in browser storage. If Chrome is installed in a non-standard location, configure its path in `apps/extension/web-ext.config.ts` using WXT's `binaries.chrome` option. Production extension files are generated in `apps/extension/.output` by `pnpm run build:extension`.
 
-## Deployment
-
-### Docker Compose
-
-- Target: web + server
-- Config: `docker-compose.yml` (app Dockerfiles live in `apps/*/Dockerfile`)
-- Build images: pnpm run docker:build
-- Start: pnpm run docker:up
-- Logs: pnpm run docker:logs
-- Stop: pnpm run docker:down
-
-Environment variables are read from each app's `.env` file (baked into web builds for public variables) and overridden in `docker-compose.yml` for container networking.
-
-For more details, see the guide on [Deploying with Docker Compose](https://www.better-t-stack.dev/docs/guides/docker).
-
-## Git Hooks and Formatting
-
-- Run checks: `pnpm run check`
-
 ## Project Structure
 
 ```
@@ -97,12 +84,8 @@ blockade/
 ├── apps/
 │   ├── web/         # Frontend application (React + TanStack Router)
 │   ├── extension/   # Chrome extension (WXT + React)
-│   └── server/      # Backend API (Hono, TRPC)
 ├── packages/
 │   ├── ui/          # Shared shadcn/ui components and styles
-│   ├── api/         # API layer / business logic
-│   ├── auth/        # Authentication configuration & logic
-│   └── db/          # Database schema & queries
 ```
 
 ## Available Scripts
@@ -110,14 +93,7 @@ blockade/
 - `pnpm run dev`: Start all applications in development mode
 - `pnpm run build`: Build all applications
 - `pnpm run dev:web`: Start only the web application
-- `pnpm run dev:server`: Start only the server
 - `pnpm run dev:extension`: Start the Chrome extension in development mode
 - `pnpm run build:extension`: Build the Chrome extension
 - `pnpm run zip:extension`: Package the Chrome extension for distribution
-- `pnpm run check-types`: Check TypeScript types across all apps
 - `pnpm run check`: Run Oxlint and Oxfmt
-- `cd apps/web && pnpm run generate-pwa-assets`: Generate PWA assets
-- `pnpm run docker:build`: Build the Docker Compose images
-- `pnpm run docker:up`: Build and start the Docker Compose stack
-- `pnpm run docker:logs`: Tail logs from the Docker Compose stack
-- `pnpm run docker:down`: Stop the Docker Compose stack
