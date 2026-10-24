@@ -1,39 +1,22 @@
-import { StrictMode, useEffect, useState } from "react";
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { RedirectPage } from "../../../web/src/components/redirect-page";
-import type { FocusTodo } from "../../../web/src/components/focus-todo-list";
 import {
   addFocusTodo,
   deleteFocusTodo,
-  getFocusTodos,
-  subscribeToFocusTodos,
+  focusTodosItem,
   toggleFocusTodo,
 } from "../../lib/focus-todos-storage";
 import { usePomodoroSettings } from "../../hooks/use-pomodoro-settings";
 import { useRedirectSettings } from "../../hooks/use-redirect-settings";
+import { useStorageItem } from "../../hooks/use-storage-item";
 import "./style.css";
 
 function ExtensionRedirectPage() {
-  const [todos, setTodos] = useState<FocusTodo[]>([]);
+  const { value: todos } = useStorageItem(focusTodosItem, []);
   const pomodoroSettings = usePomodoroSettings();
   const redirectSettings = useRedirectSettings();
-
-  useEffect(() => {
-    let active = true;
-    let receivedUpdate = false;
-    const unsubscribe = subscribeToFocusTodos((nextTodos) => {
-      receivedUpdate = true;
-      setTodos(nextTodos);
-    });
-    void getFocusTodos().then((nextTodos) => {
-      if (active && !receivedUpdate) setTodos(nextTodos);
-    });
-    return () => {
-      active = false;
-      unsubscribe();
-    };
-  }, []);
 
   return (
     <RedirectPage

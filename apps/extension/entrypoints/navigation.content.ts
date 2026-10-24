@@ -12,6 +12,9 @@ type ReplaceNavigationMessage = {
 
 export default defineContentScript({
   matches: ["http://*/*", "https://*/*"],
+  // DNR redirects blocked pages before they load; this check is the fallback for the
+  // ones it misses. At document_start it runs before the page renders or plays media.
+  runAt: "document_start",
   main() {
     const checkCurrentNavigation = async () => {
       const sourceUrl = window.location.href;

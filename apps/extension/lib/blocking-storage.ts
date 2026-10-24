@@ -23,49 +23,44 @@ import { browser } from "wxt/browser";
 import { getDailyAnalytics } from "./analytics-storage";
 import { getRedirectSettings } from "./redirect-settings-storage";
 import { getScheduleSettings } from "./schedule-settings-storage";
+import { defineStorageItem } from "./storage-item";
 
-const STORAGE_KEY = "blockingSettings";
-const BLOCKING_LOCK_NAME = "blockade:blocking-settings";
 const DOMAIN_RULE_ID = 1;
 const MAXIMUM_KEYWORD_RULES = 900;
 const LAST_BLOCKING_RULE_ID = DOMAIN_RULE_ID + MAXIMUM_KEYWORD_RULES;
+// Survives service worker restarts but not browser restarts or extension updates,
+// which is when the rules should be rewritten anyway.
+const APPLIED_RULES_KEY = "appliedBlockingRules";
 const regexSupportCache = new Map<string, boolean>();
-let updateQueue = Promise.resolve();
 
-export async function getBlockingSettings(): Promise<BlockingSettings> {
-  const stored = await browser.storage.local.get(STORAGE_KEY);
-  const value = stored[STORAGE_KEY];
-  if (!value || typeof value !== "object") return structuredClone(defaultBlockingSettings);
-  return sanitizeBlockingSettings(value as Partial<BlockingSettings>);
-}
+type AppliedRules = {
+  inputs: string;
+  ruleIds: number[];
+  /** Keywords with no DNR rule (regex unsupported or over the cap), enforced by the background instead. */
+  keywordsWithoutRules: string[];
+};
 
-export async function updateBlockingSettings(
-  update: (current: BlockingSettings) => BlockingSettings,
-): Promise<BlockingSettings> {
-  const operation = updateQueue.then(() =>
-    withBlockingSettingsLock(async () => {
-      const current = await getBlockingSettings();
-      const updated = update(current);
-      if (updated === current) return current;
+// Mirrors the applied rules' keywordsWithoutRules; reloaded from session storage after a restart.
+let keywordsWithoutRules: ReadonlySet<string> | null = null;
 
-      const next = sanitizeBlockingSettings(updated);
-      await browser.storage.local.set({ [STORAGE_KEY]: next });
-      return next;
-    }),
-  );
-  updateQueue = operation.then(
-    () => undefined,
-    () => undefined,
-  );
-  return operation;
-}
+export const blockingSettingsItem = defineStorageItem({
+  key: "blockingSettings",
+  sanitize: sanitizeBlockingSettings,
+  prepare: sanitizeBlockingSettings,
+  // The options page and the background both write these settings.
+  lockName: "blockade:blocking-settings",
+});
+
+export const getBlockingSettings = blockingSettingsItem.get;
+export const updateBlockingSettings = blockingSettingsItem.update;
 
 export async function initializeBlockingSettings(): Promise<BlockingSettings> {
-  const stored = await browser.storage.local.get(STORAGE_KEY);
-  if (stored[STORAGE_KEY]) return getBlockingSettings();
+  const { key } = blockingSettingsItem;
+  const stored = await browser.storage.local.get(key);
+  if (stored[key]) return getBlockingSettings();
 
   const settings = structuredClone(defaultBlockingSettings);
-  await browser.storage.local.set({ [STORAGE_KEY]: settings });
+  await browser.storage.local.set({ [key]: settings });
   return settings;
 }
 
@@ -213,17 +208,8 @@ export async function setDailyLimit(itemId: string, dailyLimit: string) {
   });
 }
 
-export function subscribeToBlockingSettings(listener: (settings: BlockingSettings) => void) {
-  const onChanged = (changes: Record<string, Browser.storage.StorageChange>, areaName: string) => {
-    if (areaName !== "local" || !(STORAGE_KEY in changes)) return;
-    listener(sanitizeBlockingSettings(changes[STORAGE_KEY]?.newValue ?? defaultBlockingSettings));
-  };
-
-  browser.storage.onChanged.addListener(onChanged);
-  return () => browser.storage.onChanged.removeListener(onChanged);
-}
-
-export async function rebuildBlockingRule() {
+/** Rewrites the redirect rules from the current settings. Resolves to whether they changed. */
+export async function rebuildBlockingRule(): Promise<boolean> {
   const [settings, analytics, redirectSettings, schedule] = await Promise.all([
     getBlockingSettings(),
     getDailyAnalytics(),
@@ -247,13 +233,21 @@ export async function rebuildBlockingRule() {
   const redirect = redirectSettings.customRedirectUrl
     ? { url: redirectSettings.customRedirectUrl }
     : { extensionPath: "/redirect.html" };
-  const keywordRegexes = await getSupportedKeywordRegexes(
-    scheduleActive ? settings.blockedKeywords : [],
-  );
-  const dynamicRules = await browser.declarativeNetRequest.getDynamicRules();
-  const managedRules = dynamicRules.filter(
-    (rule) => rule.id >= DOMAIN_RULE_ID && rule.id <= LAST_BLOCKING_RULE_ID,
-  );
+  const keywords = scheduleActive ? settings.blockedKeywords : [];
+
+  const inputs = JSON.stringify({ requestDomains, excludedRequestDomains, redirect, keywords });
+  const managedRuleIds = (await browser.declarativeNetRequest.getDynamicRules())
+    .map((rule) => rule.id)
+    .filter((id) => id >= DOMAIN_RULE_ID && id <= LAST_BLOCKING_RULE_ID);
+  const applied = await getAppliedRules();
+  if (applied?.inputs === inputs && sameIds(applied.ruleIds, managedRuleIds)) {
+    keywordsWithoutRules = new Set(applied.keywordsWithoutRules);
+    return false;
+  }
+
+  const keywordRegexes = await getSupportedKeywordRegexes(keywords);
+  const keywordsWithRules = new Set(keywordRegexes.map(({ keyword }) => keyword));
+  const missingKeywords = keywords.filter((keyword) => !keywordsWithRules.has(keyword));
   const rules: Browser.declarativeNetRequest.Rule[] = [
     ...(requestDomains.length === 0
       ? []
@@ -291,12 +285,35 @@ export async function rebuildBlockingRule() {
     })),
   ];
 
-  if (JSON.stringify(managedRules) === JSON.stringify(rules)) return;
-
   await browser.declarativeNetRequest.updateDynamicRules({
-    removeRuleIds: managedRules.map((rule) => rule.id),
+    removeRuleIds: managedRuleIds,
     addRules: rules,
   });
+  await browser.storage.session.set({
+    [APPLIED_RULES_KEY]: {
+      inputs,
+      ruleIds: rules.map((rule) => rule.id),
+      keywordsWithoutRules: missingKeywords,
+    } satisfies AppliedRules,
+  });
+  keywordsWithoutRules = new Set(missingKeywords);
+  return true;
+}
+
+async function getAppliedRules() {
+  const stored = await browser.storage.session.get(APPLIED_RULES_KEY);
+  return stored[APPLIED_RULES_KEY] as AppliedRules | undefined;
+}
+
+async function getKeywordsWithoutRules(): Promise<ReadonlySet<string>> {
+  // Before the first rebuild nothing is known; assume the rules cover every keyword
+  // and let the content script catch a miss, rather than redirect alongside DNR.
+  keywordsWithoutRules ??= new Set((await getAppliedRules())?.keywordsWithoutRules);
+  return keywordsWithoutRules;
+}
+
+function sameIds(a: readonly number[], b: readonly number[]) {
+  return a.length === b.length && a.every((id) => b.includes(id));
 }
 
 function getHostname(value: string) {
@@ -307,7 +324,15 @@ function getHostname(value: string) {
   }
 }
 
-export async function getBlockedNavigation(url: string) {
+export type BlockedNavigation = {
+  hostname: string;
+  blockedByKeywordOnly: boolean;
+  categoryIds: CategoryId[];
+  /** Whether a DNR rule already redirects this request, or the background has to. */
+  enforcedByRules: boolean;
+};
+
+export async function getBlockedNavigation(url: string): Promise<BlockedNavigation | null> {
   const hostname = (() => {
     try {
       return new URL(url).hostname.toLowerCase();
@@ -345,13 +370,21 @@ export async function getBlockedNavigation(url: string) {
   const isDefaultKeywordDomain = defaultAdultKeywordDomains.some((candidate) =>
     domainMatches(hostname, candidate),
   );
-  const keyword = getMatchingUrlKeyword(
-    url,
-    isDefaultKeywordDomain
-      ? settings.blockedKeywords
-      : settings.blockedKeywords.filter((item) => !isDefaultAdultKeyword(item)),
-  );
+  const keywords = isDefaultKeywordDomain
+    ? settings.blockedKeywords
+    : settings.blockedKeywords.filter((item) => !isDefaultAdultKeyword(item));
+  const keyword = getMatchingUrlKeyword(url, keywords);
   if (!domain && !keyword) return null;
+
+  let enforcedByRules = domain !== null;
+  if (!enforcedByRules) {
+    const missing = await getKeywordsWithoutRules();
+    enforcedByRules =
+      getMatchingUrlKeyword(
+        url,
+        keywords.filter((item) => !missing.has(item)),
+      ) !== null;
+  }
 
   const categoryIds = matchedCategoryIds.length
     ? matchedCategoryIds
@@ -361,6 +394,7 @@ export async function getBlockedNavigation(url: string) {
     hostname,
     blockedByKeywordOnly: Boolean(keyword && !domain),
     categoryIds,
+    enforcedByRules,
   };
 }
 
@@ -434,8 +468,4 @@ function omitRecordKey(
 ): Record<string, string> {
   if (!Object.hasOwn(record, omittedKey)) return record;
   return Object.fromEntries(Object.entries(record).filter(([key]) => key !== omittedKey));
-}
-
-function withBlockingSettingsLock<T>(operation: () => Promise<T>): Promise<T> {
-  return navigator.locks ? navigator.locks.request(BLOCKING_LOCK_NAME, operation) : operation();
 }

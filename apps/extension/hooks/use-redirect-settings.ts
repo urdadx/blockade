@@ -1,29 +1,6 @@
-import { useEffect, useState } from "react";
-
-import {
-  defaultRedirectSettings,
-  getRedirectSettings,
-  subscribeToRedirectSettings,
-} from "../lib/redirect-settings-storage";
+import { defaultRedirectSettings, redirectSettingsItem } from "../lib/redirect-settings-storage";
+import { useStorageItem } from "./use-storage-item";
 
 export function useRedirectSettings() {
-  const [settings, setSettings] = useState(defaultRedirectSettings);
-
-  useEffect(() => {
-    let active = true;
-    let receivedUpdate = false;
-    const unsubscribe = subscribeToRedirectSettings((value) => {
-      receivedUpdate = true;
-      setSettings(value);
-    });
-    void getRedirectSettings().then((value) => {
-      if (active && !receivedUpdate) setSettings(value);
-    });
-    return () => {
-      active = false;
-      unsubscribe();
-    };
-  }, []);
-
-  return settings;
+  return useStorageItem(redirectSettingsItem, defaultRedirectSettings).value;
 }

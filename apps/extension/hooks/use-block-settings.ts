@@ -1,29 +1,19 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 
 import {
+  blockSettingsItem,
   defaultBlockSettings,
-  getBlockSettings,
-  subscribeToBlockSettings,
+  toBlockSettingsValue,
 } from "../lib/block-settings-storage";
+import { useStorageItem } from "./use-storage-item";
+
+const defaultStoredBlockSettings = {
+  showContextMenu: defaultBlockSettings.showContextMenu,
+  passwordHash: "",
+  passwordSalt: "",
+};
 
 export function useBlockSettings() {
-  const [settings, setSettings] = useState(defaultBlockSettings);
-
-  useEffect(() => {
-    let active = true;
-    let receivedUpdate = false;
-    const unsubscribe = subscribeToBlockSettings((value) => {
-      receivedUpdate = true;
-      setSettings(value);
-    });
-    void getBlockSettings().then((value) => {
-      if (active && !receivedUpdate) setSettings(value);
-    });
-    return () => {
-      active = false;
-      unsubscribe();
-    };
-  }, []);
-
-  return settings;
+  const { value } = useStorageItem(blockSettingsItem, defaultStoredBlockSettings);
+  return useMemo(() => toBlockSettingsValue(value), [value]);
 }

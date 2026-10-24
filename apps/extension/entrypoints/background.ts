@@ -7,10 +7,12 @@ import { getScheduleSettings } from "../lib/schedule-settings-storage";
 import {
   blockDomain,
   getBlockedNavigation,
+  type BlockedNavigation,
   getBlockingSettings,
   initializeBlockingSettings,
   rebuildBlockingRule,
 } from "../lib/blocking-storage";
+import { createCoalescedTask } from "../lib/coalesced-task";
 import {
   ensureUsageCheckpointAlarm,
   refreshUsageSession,
@@ -25,85 +27,57 @@ const DAILY_LIMIT_RESET_ALARM = "daily-limit-reset";
 
 export default defineBackground(() => {
   browser.idle.setDetectionInterval(USAGE_IDLE_THRESHOLD_SECONDS);
-  let rebuildRequested = false;
-  let rebuildQueue: Promise<void> | null = null;
-  const queueRebuild = () => {
-    rebuildRequested = true;
-    rebuildQueue ??= (async () => {
-      while (rebuildRequested) {
-        rebuildRequested = false;
-        try {
-          await rebuildBlockingRule();
-        } catch (error) {
-          console.error("Failed to update Blockade rules", error);
-        }
-      }
-    })().finally(() => {
-      rebuildQueue = null;
-      if (rebuildRequested) queueRebuild();
-    });
-    return rebuildQueue;
-  };
-
-  let contextMenuQueue = Promise.resolve();
-  const queueContextMenuSync = () => {
-    contextMenuQueue = contextMenuQueue
-      .then(syncContextMenu, syncContextMenu)
-      .catch((error: unknown) => {
-        console.error("Failed to update the Blockade context menu", error);
-      });
-  };
-
-  let scheduleQueue = Promise.resolve();
-  const queueScheduleSync = () => {
-    scheduleQueue = scheduleQueue
-      .then(syncScheduleAlarm, syncScheduleAlarm)
-      .catch((error: unknown) => {
-        console.error("Failed to update the Blockade schedule alarm", error);
-      });
-  };
+  const queueRebuild = createCoalescedTask(async () => {
+    // DNR only applies to new requests, so tabs already open on a site that just
+    // became blocked (a new block, a schedule start, a used-up limit) are moved here.
+    if (await rebuildBlockingRule()) await enforceOpenTabs();
+  }, "Failed to update Blockade rules");
+  const queueContextMenuSync = createCoalescedTask(
+    syncContextMenu,
+    "Failed to update the Blockade context menu",
+  );
+  const queueScheduleSync = createCoalescedTask(
+    syncScheduleAlarm,
+    "Failed to update the Blockade schedule alarm",
+  );
 
   browser.runtime.onInstalled.addListener(() => {
     void initializeBlockingSettings().then(() => {
-      queueRebuild();
-      queueContextMenuSync();
-      queueScheduleSync();
+      void queueRebuild();
+      void queueContextMenuSync();
+      void queueScheduleSync();
       void syncDailyResetAlarm();
       void ensureUsageCheckpointAlarm();
       void refreshUsageSession();
     });
   });
-  browser.runtime.onStartup.addListener(() => {
-    queueContextMenuSync();
-    queueScheduleSync();
-    void syncDailyResetAlarm();
-    void ensureUsageCheckpointAlarm();
-    void refreshUsageSession();
-  });
 
   browser.storage.onChanged.addListener((changes, areaName) => {
     if (areaName !== "local") return;
-    if (changes.blockingSettings || changes.redirectSettings) queueRebuild();
+    if (changes.blockingSettings || changes.redirectSettings) void queueRebuild();
     if (changes.analyticsState) {
       void hasEnforcementThresholdChanged(changes.analyticsState)
         .then((changed) => {
-          if (changed) queueRebuild();
+          if (changed) void queueRebuild();
         })
         .catch((error: unknown) => {
           console.error("Failed to evaluate Blockade usage limits", error);
         });
     }
-    if (changes.blockSettings) queueContextMenuSync();
+    if (changes.blockSettings) void queueContextMenuSync();
     if (changes.scheduleSettings) {
-      queueRebuild();
-      queueScheduleSync();
+      void queueRebuild();
+      void queueScheduleSync();
     }
     if (changes.blockingSettings || changes.scheduleSettings) void refreshUsageSession();
   });
 
   browser.tabs.onActivated.addListener(() => void refreshUsageSession());
-  browser.tabs.onUpdated.addListener((_tabId, changeInfo) => {
-    if (changeInfo.url || changeInfo.status === "complete") void refreshUsageSession();
+  browser.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
+    // Background tabs loading don't change what the user is looking at.
+    if (tab.active && (changeInfo.url || changeInfo.status === "complete")) {
+      void refreshUsageSession();
+    }
   });
   browser.tabs.onRemoved.addListener(() => void refreshUsageSession());
   browser.windows.onFocusChanged.addListener((windowId) => {
@@ -117,37 +91,40 @@ export default defineBackground(() => {
   browser.alarms.onAlarm.addListener((alarm) => {
     if (alarm.name === USAGE_CHECKPOINT_ALARM) void refreshUsageSession(alarm.scheduledTime);
     if (alarm.name === BLOCKING_SCHEDULE_ALARM) {
-      queueRebuild();
-      queueScheduleSync();
+      void queueRebuild();
+      void queueScheduleSync();
       void refreshUsageSession(alarm.scheduledTime);
     }
     if (alarm.name === DAILY_LIMIT_RESET_ALARM) {
-      queueRebuild();
+      void queueRebuild();
       void refreshUsageSession(alarm.scheduledTime);
       void syncDailyResetAlarm();
     }
   });
 
   const recentAttempts = new Map<string, number>();
-  const getBlockedRedirectUrl = async (tabId: number, url: string) => {
-    const blocked = await getBlockedNavigation(url);
-    if (!blocked) return null;
-
+  const recordAttempt = (tabId: number, url: string, blocked: BlockedNavigation) => {
     const now = Date.now();
     const key = `${tabId}:${url}`;
-    const previousAttempt = recentAttempts.get(key) ?? 0;
-    if (now - previousAttempt >= 2_000) {
-      recentAttempts.set(key, now);
-      pruneRecentAttempts(recentAttempts, now);
-      void recordBlockedAttempt({ ...blocked, timestamp: now }).catch((error: unknown) => {
-        console.error("Failed to record a blocked attempt", error);
-      });
-    }
+    if (now - (recentAttempts.get(key) ?? 0) < 2_000) return;
+    recentAttempts.set(key, now);
+    pruneRecentAttempts(recentAttempts, now);
+    void recordBlockedAttempt({ ...blocked, timestamp: now }).catch((error: unknown) => {
+      console.error("Failed to record a blocked attempt", error);
+    });
+  };
+
+  /** Where a navigation to `url` should go instead, or null if it isn't blocked. */
+  const getBlockedRedirectUrl = async (tabId: number, url: string, { record = true } = {}) => {
+    const blocked = await getBlockedNavigation(url);
+    if (!blocked) return null;
+    if (record) recordAttempt(tabId, url, blocked);
 
     const redirectSettings = await getRedirectSettings();
     return {
       baseUrl: blocked.blockedByKeywordOnly ? new URL(url).origin : null,
       redirectUrl: redirectSettings.customRedirectUrl || browser.runtime.getURL("/redirect.html"),
+      enforcedByRules: blocked.enforcedByRules,
     };
   };
 
@@ -173,18 +150,41 @@ export default defineBackground(() => {
 
   const handleBlockedNavigation = async (
     details: { frameId: number; tabId: number; url: string },
-    redirectTab: boolean,
+    stage: "before-load" | "in-page",
   ) => {
     if (details.frameId !== 0) return;
     const redirect = await getBlockedRedirectUrl(details.tabId, details.url);
-    if (redirectTab && redirect && details.url !== redirect.redirectUrl) {
+    if (!redirect || details.url === redirect.redirectUrl) return;
+
+    if (stage === "in-page") {
+      // History and fragment changes never reach the network, so DNR can't see them.
       await replaceTabNavigation(
         details.tabId,
         details.url,
         redirect.redirectUrl,
         redirect.baseUrl,
       );
+    } else if (!redirect.enforcedByRules) {
+      // No rule covers this one (a keyword whose regex DNR rejected): replace the
+      // navigation before it loads. It hasn't committed, so there's no history to fix.
+      await browser.tabs.update(details.tabId, { url: redirect.redirectUrl });
     }
+  };
+
+  // Redirects open tabs the current rules block. Not counted as blocked attempts:
+  // the user didn't try to open these, the rules changed under them.
+  const enforceOpenTabs = async () => {
+    const tabs = await browser.tabs.query({ url: ["http://*/*", "https://*/*"] });
+    await Promise.all(
+      tabs.map(async (tab) => {
+        // Discarded tabs reload through the new rules when they're next opened.
+        if (tab.id === undefined || !tab.url || tab.discarded) return;
+        const redirect = await getBlockedRedirectUrl(tab.id, tab.url, { record: false });
+        if (redirect && tab.url !== redirect.redirectUrl) {
+          await replaceTabNavigation(tab.id, tab.url, redirect.redirectUrl, redirect.baseUrl);
+        }
+      }),
+    );
   };
 
   browser.runtime.onMessage.addListener((message: unknown, sender) => {
@@ -205,36 +205,39 @@ export default defineBackground(() => {
     );
   });
 
+  // Only web pages can be blocked; the filter keeps chrome:// and extension pages
+  // from waking the service worker.
+  const webPages = { url: [{ schemes: ["http", "https"] }] };
   browser.webNavigation.onBeforeNavigate.addListener((details) => {
-    void handleBlockedNavigation(details, false).catch((error: unknown) => {
+    void handleBlockedNavigation(details, "before-load").catch((error: unknown) => {
       console.error("Failed to check a navigation", error);
     });
-  });
+  }, webPages);
   browser.webNavigation.onHistoryStateUpdated.addListener((details) => {
-    void handleBlockedNavigation(details, true).catch((error: unknown) => {
+    void handleBlockedNavigation(details, "in-page").catch((error: unknown) => {
       console.error("Failed to block a history-state navigation", error);
     });
-  });
+  }, webPages);
   browser.webNavigation.onReferenceFragmentUpdated.addListener((details) => {
-    void handleBlockedNavigation(details, true).catch((error: unknown) => {
+    void handleBlockedNavigation(details, "in-page").catch((error: unknown) => {
       console.error("Failed to block a fragment navigation", error);
     });
-  });
+  }, webPages);
   browser.contextMenus.onClicked.addListener((info, tab) => {
     if (info.menuItemId !== BLOCK_SITE_MENU_ID) return;
     const domain = getRegistrableDomain(info.pageUrl ?? tab?.url ?? "");
     if (!domain) return;
 
-    void blockDomain(domain).then(async () => {
-      await queueRebuild();
-      if (tab?.id !== undefined) await browser.tabs.reload(tab.id);
+    // The storage change rebuilds the rules, which also redirects this tab.
+    void blockDomain(domain).catch((error: unknown) => {
+      console.error("Failed to block a website from the context menu", error);
     });
   });
 
   void ensureUsageCheckpointAlarm();
-  queueRebuild();
-  queueContextMenuSync();
-  queueScheduleSync();
+  void queueRebuild();
+  void queueContextMenuSync();
+  void queueScheduleSync();
   void syncDailyResetAlarm();
   void refreshUsageSession();
 });

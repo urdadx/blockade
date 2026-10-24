@@ -1,3 +1,5 @@
+import { defineStorageItem } from "./storage-item";
+
 export type BlockSettingsValue = {
   showContextMenu: boolean;
   passwordProtectionEnabled: boolean;
@@ -9,75 +11,58 @@ type StoredBlockSettings = {
   passwordSalt: string;
 };
 
-const STORAGE_KEY = "blockSettings";
 const HASH_ITERATIONS = 210_000;
-let updateQueue = Promise.resolve();
 
 export const defaultBlockSettings: BlockSettingsValue = {
   showContextMenu: true,
   passwordProtectionEnabled: false,
 };
 
+export const blockSettingsItem = defineStorageItem({
+  key: "blockSettings",
+  sanitize: sanitizeStoredBlockSettings,
+});
+
 export async function getBlockSettings(): Promise<BlockSettingsValue> {
-  return toBlockSettingsValue(await getStoredBlockSettings());
+  return toBlockSettingsValue(await blockSettingsItem.get());
 }
 
-export function updateBlockSettings(update: { showContextMenu?: boolean }) {
-  return queueUpdate(async () => {
-    const current = await getStoredBlockSettings();
-    const next = sanitizeStoredBlockSettings({ ...current, ...update });
-    await browser.storage.local.set({ [STORAGE_KEY]: next });
-    return toBlockSettingsValue(next);
-  });
+export async function updateBlockSettings(update: { showContextMenu?: boolean }) {
+  return toBlockSettingsValue(
+    await blockSettingsItem.update((current) =>
+      sanitizeStoredBlockSettings({ ...current, ...update }),
+    ),
+  );
 }
 
-export function setBlockSettingsPassword(password: string) {
-  return queueUpdate(async () => {
-    if (password.length < 8) throw new Error("Password must be at least 8 characters");
-    const current = await getStoredBlockSettings();
-    const salt = crypto.getRandomValues(new Uint8Array(16));
-    const hash = await derivePasswordHash(password, salt);
-    const next: StoredBlockSettings = {
+export async function setBlockSettingsPassword(password: string) {
+  if (password.length < 8) throw new Error("Password must be at least 8 characters");
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const hash = await derivePasswordHash(password, salt);
+  return toBlockSettingsValue(
+    await blockSettingsItem.update((current) => ({
       ...current,
       passwordHash: bytesToBase64(hash),
       passwordSalt: bytesToBase64(salt),
-    };
-    await browser.storage.local.set({ [STORAGE_KEY]: next });
-    return toBlockSettingsValue(next);
-  });
+    })),
+  );
 }
 
-export function disableBlockSettingsPassword(password: string) {
-  return queueUpdate(async () => {
-    const current = await getStoredBlockSettings();
-    if (!(await passwordMatches(password, current))) return false;
+export async function disableBlockSettingsPassword(password: string) {
+  const verified = await blockSettingsItem.get();
+  if (!(await passwordMatches(password, verified))) return false;
 
-    const next: StoredBlockSettings = {
-      ...current,
-      passwordHash: "",
-      passwordSalt: "",
-    };
-    await browser.storage.local.set({ [STORAGE_KEY]: next });
-    return true;
-  });
+  // Only clear the password that was verified, not one set in the meantime.
+  const next = await blockSettingsItem.update((current) =>
+    current.passwordHash === verified.passwordHash
+      ? { ...current, passwordHash: "", passwordSalt: "" }
+      : current,
+  );
+  return !next.passwordHash;
 }
 
 export async function verifyBlockSettingsPassword(password: string) {
-  return passwordMatches(password, await getStoredBlockSettings());
-}
-
-export function subscribeToBlockSettings(listener: (settings: BlockSettingsValue) => void) {
-  const onChanged = (changes: Record<string, Browser.storage.StorageChange>, areaName: string) => {
-    if (areaName !== "local" || !changes[STORAGE_KEY]) return;
-    listener(toBlockSettingsValue(sanitizeStoredBlockSettings(changes[STORAGE_KEY].newValue)));
-  };
-  browser.storage.onChanged.addListener(onChanged);
-  return () => browser.storage.onChanged.removeListener(onChanged);
-}
-
-async function getStoredBlockSettings() {
-  const stored = await browser.storage.local.get(STORAGE_KEY);
-  return sanitizeStoredBlockSettings(stored[STORAGE_KEY]);
+  return passwordMatches(password, await blockSettingsItem.get());
 }
 
 function sanitizeStoredBlockSettings(value: unknown): StoredBlockSettings {
@@ -93,7 +78,7 @@ function sanitizeStoredBlockSettings(value: unknown): StoredBlockSettings {
   };
 }
 
-function toBlockSettingsValue(settings: StoredBlockSettings): BlockSettingsValue {
+export function toBlockSettingsValue(settings: StoredBlockSettings): BlockSettingsValue {
   return {
     showContextMenu: settings.showContextMenu,
     passwordProtectionEnabled: Boolean(settings.passwordHash && settings.passwordSalt),
@@ -139,13 +124,4 @@ function bytesToBase64(bytes: Uint8Array) {
 
 function base64ToBytes(value: string) {
   return Uint8Array.from(atob(value), (character) => character.charCodeAt(0));
-}
-
-function queueUpdate<T>(update: () => Promise<T>) {
-  const operation = updateQueue.then(update, update);
-  updateQueue = operation.then(
-    () => undefined,
-    () => undefined,
-  );
-  return operation;
 }

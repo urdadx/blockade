@@ -30,6 +30,7 @@ export const defaultAdultKeywords = [
   "threesome",
   "facefuck",
   "onfours",
+  "mia khalifa",
   "on fours",
   "onallfours",
   "desisex",

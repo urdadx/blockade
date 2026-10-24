@@ -2,64 +2,52 @@ import {
   defaultAnalyticsState,
   emptyDailyAnalytics,
   getLocalDateKey,
-  sanitizeDailyAnalytics,
   sanitizeAnalyticsState,
   type AnalyticsState,
   type DailyAnalytics,
   type UsageSession,
 } from "@blockade/core";
-import { browser } from "wxt/browser";
+import { defineStorageItem } from "./storage-item";
 
-const STORAGE_KEY = "analyticsState";
 const RETENTION_DAYS = 90;
 const MAX_CONFIRMED_SESSION_GAP_MS = 6 * 60 * 1000;
-let updateQueue = Promise.resolve();
+// A tab or focus event that keeps the same session doesn't need its own write: the
+// next checkpoint (at the latest the one-minute alarm) still counts that time.
+const MIN_UNCHANGED_CHECKPOINT_MS = 30 * 1000;
 
-export async function getAnalyticsState(): Promise<AnalyticsState> {
-  const stored = await browser.storage.local.get(STORAGE_KEY);
-  const value = stored[STORAGE_KEY];
-  return pruneHistory(sanitizeAnalyticsState(value ?? defaultAnalyticsState));
-}
+export const analyticsItem = defineStorageItem({
+  key: "analyticsState",
+  sanitize: (value) => pruneHistory(sanitizeAnalyticsState(value ?? defaultAnalyticsState)),
+  prepare: pruneHistory,
+});
+
+export const getAnalyticsState = analyticsItem.get;
 
 export async function getDailyAnalytics(date = getLocalDateKey()): Promise<DailyAnalytics> {
-  const stored = await browser.storage.local.get(STORAGE_KEY);
-  const value = stored[STORAGE_KEY];
-  if (!value || typeof value !== "object") return emptyDailyAnalytics();
-  const days = (value as { days?: unknown }).days;
-  if (!days || typeof days !== "object") return emptyDailyAnalytics();
-  return sanitizeDailyAnalytics((days as Record<string, unknown>)[date]);
-}
-
-async function updateAnalyticsState(
-  update: (current: AnalyticsState) => AnalyticsState,
-): Promise<AnalyticsState> {
-  const operation = updateQueue.then(async () => {
-    const current = await getAnalyticsState();
-    const updated = update(current);
-    if (updated === current) return current;
-
-    const next = pruneHistory(updated);
-    await browser.storage.local.set({ [STORAGE_KEY]: next });
-    return next;
-  });
-  updateQueue = operation.then(
-    () => undefined,
-    () => undefined,
-  );
-  return operation;
+  return (await analyticsItem.get()).days[date] ?? emptyDailyAnalytics();
 }
 
 export async function checkpointUsage(nextSession: UsageSession | null, timestamp = Date.now()) {
-  return updateAnalyticsState((current) => {
+  return analyticsItem.update((current) => {
     if (!current.activeSession && !nextSession) return current;
 
     const checkpointAt = sanitizeEventTimestamp(timestamp);
+    const session = current.activeSession;
+    if (
+      session &&
+      nextSession &&
+      isSameSession(session, nextSession) &&
+      checkpointAt - session.checkpointAt >= 0 &&
+      checkpointAt - session.checkpointAt < MIN_UNCHANGED_CHECKPOINT_MS
+    ) {
+      return current;
+    }
+
     const next: AnalyticsState = {
       ...current,
       days: { ...current.days },
       activeSession: nextSession ? { ...nextSession, checkpointAt } : null,
     };
-    const session = current.activeSession;
     if (!session) return next;
 
     const elapsedMs = checkpointAt - session.checkpointAt;
@@ -91,7 +79,7 @@ export async function recordBlockedAttempt({
   categoryIds: readonly string[];
   timestamp?: number;
 }) {
-  return updateAnalyticsState((current) => {
+  return analyticsItem.update((current) => {
     const next: AnalyticsState = { ...current, days: { ...current.days } };
     const day = getMutableDay(next.days, getLocalDateKey(sanitizeEventTimestamp(timestamp)));
     day.blockedAttempts = addCount(day.blockedAttempts, 1);
@@ -101,17 +89,6 @@ export async function recordBlockedAttempt({
     }
     return next;
   });
-}
-
-export function subscribeToAnalyticsState(listener: (state: AnalyticsState) => void) {
-  const onChanged = (changes: Record<string, Browser.storage.StorageChange>, areaName: string) => {
-    if (areaName !== "local" || !(STORAGE_KEY in changes)) return;
-    listener(
-      pruneHistory(sanitizeAnalyticsState(changes[STORAGE_KEY]?.newValue ?? defaultAnalyticsState)),
-    );
-  };
-  browser.storage.onChanged.addListener(onChanged);
-  return () => browser.storage.onChanged.removeListener(onChanged);
 }
 
 function pruneHistory(state: AnalyticsState): AnalyticsState {
@@ -129,6 +106,15 @@ function pruneHistory(state: AnalyticsState): AnalyticsState {
     ...state,
     days: Object.fromEntries(entries),
   };
+}
+
+function isSameSession(a: UsageSession, b: UsageSession) {
+  return (
+    a.hostname === b.hostname &&
+    a.tracksFocus === b.tracksFocus &&
+    a.itemIds.length === b.itemIds.length &&
+    a.itemIds.every((itemId) => b.itemIds.includes(itemId))
+  );
 }
 
 function getMutableDay(days: Record<string, DailyAnalytics>, date: string): DailyAnalytics {

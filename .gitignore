@@ -56,3 +56,6 @@ coverage
 .cache
 tmp
 temp
+
+# Launch video (Remotion)
+apps/video
