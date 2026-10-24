@@ -2,11 +2,11 @@
 
 Blockade is a browser extension that blocks distracting websites so you can stay more productive.
 
-<a href="docs/media/blockade-launch.mp4">
-  <img src="docs/media/blockade-launch-poster.jpg" alt="Blockade launch video: blocking tiktok.com from the extension popup" width="720">
-</a>
+▶ [Watch the demo video]
 
-▶ [Watch the demo video](docs/media/blockade-launch.mp4) (41s)
+https://github.com/user-attachments/assets/c990be1b-412f-43bd-b55d-5fade0e71c67
+
+
 
 ## Install Blockade
 
